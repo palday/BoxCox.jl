@@ -15,6 +15,11 @@ export BoxCoxTransformation,
     fit,
     predict
 
+abstract type PowerTransformation end
+# struct BoxCoxTransformation <: PowerTransformation end
+# struct YeoJohnsonTransformation <: PowerTransformation end
+# struct BickelDoksumTransformation <: PowerTransformation end
+
 # params, offset, nobs, confint
 
 BoxCoxTransformation = @NamedTuple begin
