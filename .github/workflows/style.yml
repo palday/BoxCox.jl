@@ -30,8 +30,7 @@ jobs:
           using Pkg; Pkg.activate()
           Pkg.install("JuliaFormatter")
           using JuliaFormatter
-          format(".", YASStyle())
-          julia --project=format 'format/run.jl'
+          format(".", YASStyle())'
       - uses: reviewdog/action-suggester@v1
         if: github.event_name == 'pull_request'
         with:
