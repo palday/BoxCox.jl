@@ -6,4 +6,4 @@ makedocs(; root=joinpath(dirname(pathof(BoxCox)), "..", "docs"),
          doctest=true,
          pages=["index.md", "api.md"])
 
-deploydocs(; repo="github.com/palday/BoxCox.jl", push_preview=true)
+deploydocs(; repo="github.com/palday/BoxCox.jl", push_preview=true, devbranch="main")
