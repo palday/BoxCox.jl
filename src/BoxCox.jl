@@ -8,12 +8,12 @@ using StatsBase
 using Printf
 
 export BoxCoxTransformation,
-    loglikelihood,
-    response,
-    is_fitted,
-    fitted,
-    fit,
-    predict
+       loglikelihood,
+       response,
+       is_fitted,
+       fitted,
+       fit,
+       predict
 
 abstract type PowerTransformation end
 # struct BoxCoxTransformation <: PowerTransformation end
@@ -43,20 +43,21 @@ end
 # fit! ?
 # should we support passing a formula or model matrix?
 
-function StatsAPI.fit(::Type{BoxCoxTransformation}, x::AbstractVector{Float64}; algorithm::Symbol=:LN_NELDERMEAD, atol=1e-8, rtol=1e-8, maxiter=-1)
-        # lowerbound for precision is 0, everything else has no lowerbound
-        opt = NLopt.Opt(algorithm, 1)
-        NLopt.xtol_rel!(opt, atol) # relative criterion on parameter values
-        NLopt.xtol_rel!(opt, rtol) # relative criterion on parameter values
-        NLopt.maxeval!(opt, maxiter)
-        function obj(λvec, g)
-            isempty(g) || throw(ArgumentError("g should be empty for this objective"))
-            val = _loglikelihood(only(λvec), 0, 1, x)
-            return val
-        end
-        opt.max_objective = obj
-        (ll, λ, retval) = optimize(opt, [0.0])
-        return BoxCoxTransformation((only(λ), 0, 1, x))
+function StatsAPI.fit(::Type{BoxCoxTransformation}, x::AbstractVector{Float64};
+                      algorithm::Symbol=:LN_NELDERMEAD, atol=1e-8, rtol=1e-8, maxiter=-1)
+    # lowerbound for precision is 0, everything else has no lowerbound
+    opt = NLopt.Opt(algorithm, 1)
+    NLopt.xtol_rel!(opt, atol) # relative criterion on parameter values
+    NLopt.xtol_rel!(opt, rtol) # relative criterion on parameter values
+    NLopt.maxeval!(opt, maxiter)
+    function obj(λvec, g)
+        isempty(g) || throw(ArgumentError("g should be empty for this objective"))
+        val = _loglikelihood(only(λvec), 0, 1, x)
+        return val
+    end
+    opt.max_objective = obj
+    (ll, λ, retval) = optimize(opt, [0.0])
+    return BoxCoxTransformation((only(λ), 0, 1, x))
 end
 
 StatsAPI.fitted(t::BoxCoxTransformation) = predict(t, response(t))
@@ -71,8 +72,9 @@ function _loglikelihood(λ, x, α=0, normalization=1)
     return -n / 2 * log(σ²) + (t.λ - 1) * sum(log, x)
 end
 
-function StatsAPI.loglikelihood(t::BoxCoxTransformation, x::AbstractVector{Float64}=response(t))
-    _loglikelihood(t.λ, x; t.α, t.normalization)
+function StatsAPI.loglikelihood(t::BoxCoxTransformation,
+                                x::AbstractVector{Float64}=response(t))
+    return _loglikelihood(t.λ, x; t.α, t.normalization)
 end
 
 StatsAPI.response(t::BoxCoxTransformation) = t.y
@@ -90,8 +92,8 @@ function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, "\nresultant transformation:\n")
 
     if isapprox(t.λ, 1)
-       println(io, "y (the identity)")
-       return nothing
+        println(io, "y (the identity)")
+        return nothing
     end
 
     λ = @sprintf "%.1f" t.λ
@@ -113,7 +115,6 @@ function Base.show(io::IO, t::BoxCoxTransformation)
         denominator *= string(" * ", norm, @sprintf("^%.1f", t.λ - 1))
     end
     width = maximum(length, [numerator, denominator]) + 2
-
 
     println(io, lpad(numerator, (width - length(numerator)) ÷ 2 + length(numerator)))
     println(io, "-"^width)
