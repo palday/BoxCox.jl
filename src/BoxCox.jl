@@ -10,29 +10,29 @@ using Printf
 export BoxCoxTransformation,
        loglikelihood,
        response,
-       is_fitted,
+    #    is_fitted,
        fitted,
        fit,
        predict
+# params, offset, nobs, confint
 
 abstract type PowerTransformation end
 # struct BoxCoxTransformation <: PowerTransformation end
 # struct YeoJohnsonTransformation <: PowerTransformation end
 # struct BickelDoksumTransformation <: PowerTransformation end
 
-# params, offset, nobs, confint
 
-BoxCoxTransformation = @NamedTuple begin
+@kwdef struct BoxCoxTransformation <: PowerTransformation
     λ::Float64 # power
-    α::Float64 # shift
-    normalization::Float64 # generally the geometric mean; does not apply to log
+    α::Float64 = 0 # shift
+    normalization::Float64 = 1 # generally the geometric mean
     y::Vector{Float64} # observed response
-    atol::Float64 # isapprox tolerance
+    atol::Float64 = 1e-8 # isapprox tolerance to round towards zero or one
 end
 
 function _boxcox(λ, x; α=0, normalization=1)
     x += α
-    λ == 0 && return normalization * log(x)
+    isapprox(λ, 0) && return normalization * log(x)
     return (x^λ - 1) / (λ * normalization^(λ - 1))
 end
 
@@ -40,36 +40,43 @@ function (t::BoxCoxTransformation)(x::Number)
     return _boxcox(t.λ, x; t.α, t.normalization)
 end
 
+# stop carrying around the data
+function Base.empty!(bt::BoxCoxTransformation)
+    empty!(bt.y)
+    return bt
+end
+
 # fit! ?
 # should we support passing a formula or model matrix?
 
-function StatsAPI.fit(::Type{BoxCoxTransformation}, x::AbstractVector{Float64};
-                      algorithm::Symbol=:LN_NELDERMEAD, atol=1e-8, rtol=1e-8, maxiter=-1)
+function StatsAPI.fit(::Type{BoxCoxTransformation}, x::AbstractVector{<:Number}; atol=1e-12, α=0, normalization=1,
+                      algorithm::Symbol=:LN_NELDERMEAD, opt_atol=1e-8, opt_rtol=1e-8, maxiter=-1)
     # lowerbound for precision is 0, everything else has no lowerbound
+    x = convert(Vector{Float64}, x)
     opt = NLopt.Opt(algorithm, 1)
-    NLopt.xtol_rel!(opt, atol) # relative criterion on parameter values
-    NLopt.xtol_rel!(opt, rtol) # relative criterion on parameter values
+    NLopt.xtol_rel!(opt, opt_atol) # relative criterion on parameter values
+    NLopt.xtol_rel!(opt, opt_rtol) # relative criterion on parameter values
     NLopt.maxeval!(opt, maxiter)
     function obj(λvec, g)
         isempty(g) || throw(ArgumentError("g should be empty for this objective"))
-        val = _loglikelihood(only(λvec), 0, 1, x)
+        val = _loglikelihood(only(λvec), x; α, normalization)
         return val
     end
     opt.max_objective = obj
     (ll, λ, retval) = optimize(opt, [0.0])
-    return BoxCoxTransformation((only(λ), 0, 1, x))
+    return BoxCoxTransformation(; λ=only(λ), α, normalization, y=x, atol)
 end
 
 StatsAPI.fitted(t::BoxCoxTransformation) = predict(t, response(t))
 StatsAPI.predict(t::BoxCoxTransformation, v::AbstractVector{<:Number}) = t.(v)
 
 # pull this out so that we can use it in optimization
-function _loglikelihood(λ, x, α=0, normalization=1)
-    tx = _boxcox(λ, x; α, normalization)
+function _loglikelihood(λ, x; α=0, normalization=1)
+    tx = _boxcox.(λ, x; α, normalization)
     n = length(tx)
     σ² = var(tx; corrected=false)
 
-    return -n / 2 * log(σ²) + (t.λ - 1) * sum(log, x)
+    return -n / 2 * log(σ²) + (λ - 1) * sum(log, x)
 end
 
 function StatsAPI.loglikelihood(t::BoxCoxTransformation,
@@ -83,12 +90,12 @@ function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, "Box-Cox transformation")
     println(io)
     if !isapprox(t.α, 0)
-        @printf io "a priori α:    %.2f\n" t.α
+        @printf io "a priori α:    %.4f\n" t.α
     end
     if !isapprox(t.normalization, 1)
-        @printf io "normalization: %.2f\n" t.normalization
+        @printf io "normalization: %.4f\n" t.normalization
     end
-    @printf io "\nestimated λ: %.2f" t.λ
+    @printf io "\nestimated λ: %.4f" t.λ
     println(io, "\nresultant transformation:\n")
 
     if isapprox(t.λ, 1)
