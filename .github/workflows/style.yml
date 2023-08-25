@@ -28,7 +28,7 @@ jobs:
         run: |
           julia -e'
           using Pkg; Pkg.activate()
-          Pkg.install("JuliaFormatter")
+          Pkg.add("JuliaFormatter")
           using JuliaFormatter
           format(".", YASStyle())'
       - uses: reviewdog/action-suggester@v1
