@@ -31,7 +31,6 @@ Abstract type representing [power transformations](https://en.wikipedia.org/wiki
 such as the Box-Cox transformation.
 """
 abstract type PowerTransformation end
-# struct BoxCoxTransformation <: PowerTransformation end
 # struct YeoJohnsonTransformation <: PowerTransformation end
 # struct BickelDoksumTransformation <: PowerTransformation end
 
@@ -309,11 +308,11 @@ StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
 
 StatsAPI.params(bc::BoxCoxTransformation) = [bc.λ]
 
-function _pvalue(bc::BoxCoxTransformation)
-    llhat = loglikelihood(bc)
-    ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
-    return chisqcdf(1, 2 * (llhat - ll0))
-end
+# function _pvalue(bc::BoxCoxTransformation)
+#     llhat = loglikelihood(bc)
+#     ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
+#     return chisqcdf(1, 2 * (llhat - ll0))
+# end
 
 # function StatsAPI.confint(bc::BoxCoxTransformation)
 #     ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
