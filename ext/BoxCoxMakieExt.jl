@@ -1,12 +1,11 @@
 module BoxCoxMakieExt
 
+using BoxCox
 using Makie
 
-using BoxCox: BoxCox,
-              BoxCoxTransformation,
-              _loglikelihood_boxcox!,
-              loglikelihood,
-              qr, chisqinvcdf, @compat
+using BoxCox: _loglikelihood_boxcox!,
+              qr, chisqinvcdf, @compat,
+              @setup_workload, @compile_workload
 
 # XXX it would be great to have a 1-1 aspect ratio here,
 # but this seems like something that should be done upstream
@@ -133,4 +132,22 @@ function Makie.plot!(ax::Axis, P::Type{<:BCPlot}, allattrs::Makie.Attributes, bc
 end
 
 Makie.plottype(::BoxCoxTransformation) = BCPlot
+
+@setup_workload begin
+    # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
+    # precompile file and potentially make loading faster.
+    # draw from Normal(0,1)
+    y = [-0.174865, -0.312804, -1.06157, 1.20795, 0.573458, 0.0566415, 0.0481339, 1.98065,
+         -0.196412, -0.464189]
+    y2 = abs2.(y)
+    X = ones(length(y), 1)
+    b1 = fit(BoxCoxTransformation, y2)
+    b2 = fit(BoxCoxTransformation, X, y2)
+    @compile_workload begin
+        qqnorm(b1)
+        boxcoxplot(b1)
+        boxcoxplot(b2)
+    end
+end
+
 end # module
