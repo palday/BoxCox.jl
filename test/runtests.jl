@@ -64,13 +64,13 @@ end
     bcp = boxcoxplot(vol)
     save(path("boxcox.png"), bcp)
 
-    volform = fit(BoxCoxTransformation, 
-                  @formula(Volume ~ 1 + log(Height) + log(Girth)), 
+    volform = fit(BoxCoxTransformation,
+                  @formula(Volume ~ 1 + log(Height) + log(Girth)),
                   trees)
-    bcpf = boxcoxplot(vol; conf_level=0.95, 
+    bcpf = boxcoxplot(vol; conf_level=0.95,
                       title="profile log likelihood",
-                      xlabel="parameter", 
-                      ylabel="LL")                  
+                      xlabel="parameter",
+                      ylabel="LL")
     save(path("boxcox_formula.png"), bcpf)
 end
 
