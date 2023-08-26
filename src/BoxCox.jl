@@ -3,6 +3,8 @@ module BoxCox
 using Compat
 using DocStringExtensions
 using LinearAlgebra
+# we use NLopt because that's what MixedModels uses and this was developed
+# with a particular application of MixedModels.jl in mind
 using NLopt
 using Printf
 using Statistics
@@ -95,7 +97,7 @@ See also [BoxCoxTransformation](@ref).
 
 Box, George E. P.; Cox, D. R. (1964). "An analysis of transformations". _Journal of the Royal Statistical Society_, Series B. 26 (2): 211--252.
 """
-boxcox(λ; kwargs...) = x -> boxcox(λ, x; kwargs...) 
+boxcox(λ; kwargs...) = x -> boxcox(λ, x; kwargs...)
 function boxcox(λ, x; atol=0)
     if isapprox(λ, 0; atol)
         logx = log(x)
@@ -116,7 +118,6 @@ See also [`BoxCox`](@ref).
 function (t::BoxCoxTransformation)(x::Number)
     return boxcox(t.λ, x)
 end
-
 
 """
     boxcoxplot(bc::BoxCoxTransformation; kwargs...)
@@ -149,7 +150,6 @@ end
 function boxcoxplot(::PowerTransformation; kwargs...)
     throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
 end
-
 
 """
     empty!(bt::BoxCoxTransformation)
@@ -273,13 +273,15 @@ end
 
 # pull this out so that we can use it in optimization
 function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, Xqr::Factorization,
-                                X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number; kwargs...)
+                                X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number;
+                                kwargs...)
     _boxcox!(y_trans, y, λ; kwargs...)
     y_trans -= X * (Xqr \ y_trans)
     return _loglikelihood_boxcox(y_trans)
 end
 
-function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number; kwargs...)
+function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number;
+                                kwargs...)
     _boxcox!(y_trans, y, λ; kwargs...)
     y_trans .-= mean(y_trans)
     return _loglikelihood_boxcox(y_trans)
@@ -289,7 +291,8 @@ function _loglikelihood_boxcox(y_trans::Vector{<:Number})
     return -0.5 * length(y_trans) * log(sum(abs2, y_trans))
 end
 
-function _loglikelihood_boxcox(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number}; kwargs...)
+function _loglikelihood_boxcox(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number};
+                               kwargs...)
     return _loglikelihood_boxcox!(similar(y), qr(X), X, y, λ)
 end
 
@@ -321,8 +324,9 @@ end
 #     return [only(λd), bc.λ + (bc.λ - only(λd))]
 # end
 
-
-StatsAPI.loglikelihood(t::BoxCoxTransformation) = _loglikelihood_boxcox(t.λ, t.X, t.y; t.atol)
+function StatsAPI.loglikelihood(t::BoxCoxTransformation)
+    return _loglikelihood_boxcox(t.λ, t.X, t.y; t.atol)
+end
 
 function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, "Box-Cox transformation")
