@@ -5,7 +5,6 @@ using RDatasets: dataset as rdataset
 using StatsModels
 using Test
 
-
 @testset "Aqua" begin
     Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
 end
@@ -31,14 +30,13 @@ trees = rdataset("datasets", "trees")
 
     vol = fit(BoxCoxTransformation, trees.Volume)
     volform = fit(BoxCoxTransformation, @formula(Volume ~ 1), trees)
-    @test vol ≈ volform atol=1e-6
+    @test vol ≈ volform atol = 1e-6
 
     for bc in [vol, volform]
-        @test bc.λ ≈ λref rtol=1e-3
-        @test loglikelihood(bc) ≈ llref rtol=1e-3
+        @test bc.λ ≈ λref rtol = 1e-3
+        @test loglikelihood(bc) ≈ llref rtol = 1e-3
     end
 end
-
 
 @testset "QR decomposition" begin
     # > bc <- boxcox(Volume ~ log(Height) + log(Girth), data = trees,
@@ -49,6 +47,6 @@ end
     # [1] 26.409734148606
 
     bcmass = fit(BoxCoxTransformation, @formula(Volume ~ log(Height) + log(Girth)), trees)
-    @test bcmass.λ ≈ -0.06733173317331734 rtol=1e-3
-    @test loglikelihood(bcmass) ≈ 26.409734148606 rtol=1e-3
+    @test bcmass.λ ≈ -0.06733173317331734 rtol = 1e-3
+    @test loglikelihood(bcmass) ≈ 26.409734148606 rtol = 1e-3
 end

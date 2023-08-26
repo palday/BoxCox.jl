@@ -5,18 +5,13 @@ using BoxCox: StatsAPI
 using StatsModels
 using Tables
 
-
 function StatsAPI.fit(::Type{BoxCoxTransformation}, f::FormulaTerm, data;
-                     contrasts=Dict{Symbol,Any}(), kwargs...)
+                      contrasts=Dict{Symbol,Any}(), kwargs...)
     tbl = Tables.columntable(data)
     fvars = StatsModels.termvars(f)
     tvars = Tables.columnnames(tbl)
     fvars ⊆ tvars ||
-        throw(
-            ArgumentError(
-                "The following formula variables are not present in the table: $(setdiff(fvars, tvars))",
-            ),
-        )
+        throw(ArgumentError("The following formula variables are not present in the table: $(setdiff(fvars, tvars))"))
 
     # TODO: perform missing_omit() after apply_schema() when improved
     # missing support is in a StatsModels release

@@ -37,7 +37,7 @@ function boxcox(λ, x; atol=0)
     if isapprox(λ, 0; atol)
         logx = log(x)
         λlogx = λ * logx
-        return logx * (1 + (λlogx) / 2 * (1 + (λlogx) / 3 * (1 + (λlogx )/ 4)))
+        return logx * (1 + (λlogx) / 2 * (1 + (λlogx) / 3 * (1 + (λlogx) / 4)))
     end
 
     return (x^λ - 1) / λ
@@ -57,7 +57,8 @@ end
 Base.isempty(bt::BoxCoxTransformation) = any(isempty, [bt.y, bt.x])
 
 function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
-                      algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8, maxiter=-1)
+                      algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
+                      maxiter=-1)
     y = convert(Vector{Float64}, y)
     y ./= geomean(y)
     opt = NLopt.Opt(algorithm, 1)
@@ -76,8 +77,10 @@ function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number};
     return BoxCoxTransformation(; λ=only(λ), y, X=nothing, atol)
 end
 
-function StatsAPI.fit(::Type{BoxCoxTransformation}, X::AbstractMatrix{<:Number}, y::AbstractVector{<:Number}; atol=1e-8,
-                      algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8, maxiter=-1)
+function StatsAPI.fit(::Type{BoxCoxTransformation}, X::AbstractMatrix{<:Number},
+                      y::AbstractVector{<:Number}; atol=1e-8,
+                      algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
+                      maxiter=-1)
     y = float.(y) # we modify, so let's make a copy!
     y ./= geomean(y)
     X = convert(Matrix{Float64}, X)
@@ -94,7 +97,7 @@ function StatsAPI.fit(::Type{BoxCoxTransformation}, X::AbstractMatrix{<:Number},
         return val
     end
     opt.max_objective = obj
-     (ll, λ, retval) = optimize(opt, [1.0])
+    (ll, λ, retval) = optimize(opt, [1.0])
     return BoxCoxTransformation(; λ=only(λ), y, X, atol)
 end
 
@@ -106,7 +109,8 @@ function _boxcox!(y_trans, y, λ)
 end
 
 # pull this out so that we can use it in optimization
-function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, Xqr::Factorization, X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number)
+function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, Xqr::Factorization,
+                                X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number)
     _boxcox!(y_trans, y, λ)
     y_trans -= X * (Xqr \ y_trans)
     return _loglikelihood_boxcox(y_trans)
@@ -118,7 +122,9 @@ function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, y::Vector{<:Number}, 
     return _loglikelihood_boxcox(y_trans)
 end
 
-_loglikelihood_boxcox(y_trans::Vector{<:Number}) =  -0.5 * length(y_trans) * log(sum(abs2, y_trans))
+function _loglikelihood_boxcox(y_trans::Vector{<:Number})
+    return -0.5 * length(y_trans) * log(sum(abs2, y_trans))
+end
 
 function _loglikelihood_boxcox(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number})
     return _loglikelihood_boxcox!(similar(y), qr(X), X, y, λ)
@@ -134,7 +140,7 @@ StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
 function _pvalue(bc::BoxCoxTransformation)
     llhat = loglikelihood(bc)
     ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
-    return  chisqcdf(1, 2 * (llhat - ll0))
+    return chisqcdf(1, 2 * (llhat - ll0))
 end
 
 # function StatsAPI.confint(bc::BoxCoxTransformation)
@@ -169,7 +175,6 @@ function _sse(λ::Number, ::Nothing, y::Vector{<:Number})
     y_trans .-= mean(y_trans)
     return y_trans'y_trans
 end
-
 
 StatsAPI.loglikelihood(t::BoxCoxTransformation) = _loglikelihood_boxcox(t.λ, t.X, t.y)
 
