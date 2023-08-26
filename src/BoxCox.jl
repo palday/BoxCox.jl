@@ -6,6 +6,7 @@ using LinearAlgebra
 # we use NLopt because that's what MixedModels uses and this was developed
 # with a particular application of MixedModels.jl in mind
 using NLopt
+using PrecompileTools
 using Printf
 using Statistics
 using StatsAPI
@@ -365,6 +366,20 @@ end
 if !isdefined(Base, :get_extension)
     include("../ext/BoxCoxStatsModelsExt.jl")
     include("../ext/BoxCoxMakieExt.jl")
+end
+
+@setup_workload begin
+    # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
+    # precompile file and potentially make loading faster.
+    # draw from Normal(0,1)
+    y = [-0.174865, -0.312804, -1.06157, 1.20795, 0.573458, 0.0566415, 0.0481339, 1.98065, -0.196412, -0.464189]
+    y2 = abs2.(y)
+    X = ones(length(y), 1)
+
+    @compile_workload begin
+        fit(BoxCoxTransformation, y2)
+        fit(BoxCoxTransformation, X, y2)
+    end
 end
 
 end # module BoxCox
