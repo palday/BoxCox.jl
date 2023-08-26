@@ -12,6 +12,8 @@ using StatsAPI
 using StatsBase
 using StatsFuns
 
+using StatsAPI: params
+
 export BoxCoxTransformation,
        boxcox,
        confint,
@@ -298,7 +300,7 @@ function _loglikelihood_boxcox(λ::Number, X::AbstractMatrix{<:Number}, y::Vecto
 end
 
 function _loglikelihood_boxcox(λ::Number, ::Nothing, y::Vector{<:Number}; kwargs...)
-    return _loglikelihood_boxcox!(similar(y), y, λ)
+    return   _loglikelihood_boxcox!(similar(y), y, λ)
 end
 
 StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
