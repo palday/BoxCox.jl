@@ -69,7 +69,7 @@ end
                   @formula(Volume ~ 1 + log(Height) + log(Girth)),
                   trees)
     bcpf = Figure()
-    ax = Axis(bcpf[1, 1])                  
+    ax = Axis(bcpf[1, 1])
     boxcoxplot!(ax, volform; conf_level=0.95,
                 title="profile log likelihood",
                 xlabel="parameter",
