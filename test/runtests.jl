@@ -13,12 +13,6 @@ path(x) = joinpath(@__DIR__, "out", x)
     end
 end
 
-# using BoxCox, TestEnv; TestEnv.activate()
-# using CairoMakie
-# using RDatasets: dataset as rdataset
-# using StatsModels
-# using Test
-
 trees = rdataset("datasets", "trees")
 
 @testset "single vector" begin
@@ -69,4 +63,49 @@ end
 
     bcp = boxcoxplot(vol)
     save(path("boxcox.png"), bcp)
+end
+
+@testset "boxcox function" begin
+    # log
+    @test boxcox(0, 1) == boxcox(0)(1) == 0
+    @test boxcox(1e-3, 1; atol=1e-2) == boxcox(1e-3; atol=1e-2)(1) == 0
+    @test boxcox(1, 0) == -1 
+    @test boxcox(2, 0) == -1/2  
+end
+
+@testset "show" begin
+    bc = BoxCoxTransformation(; λ=1, y=[], X=nothing)
+
+    output = """Box-Cox transformation
+
+estimated λ: 1.0000
+resultant transformation:
+
+y (the identity)
+"""
+    @test sprint(show, bc) == output
+
+    bc = BoxCoxTransformation(; λ=1e-3, y=[], X=nothing, atol=1e-2)
+    output = """Box-Cox transformation
+
+estimated λ: 0.0010
+resultant transformation:
+
+log y
+"""
+
+    @test sprint(show, bc) == output
+
+    bc = BoxCoxTransformation(; λ=2, y=[], X=nothing, atol=1e-2)
+
+    output = """Box-Cox transformation
+
+estimated λ: 2.0000
+resultant transformation:
+
+ y^2.0 - 1
+-----------
+    2.0
+""" 
+    @test sprint(show, bc) == output
 end
