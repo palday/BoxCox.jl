@@ -167,11 +167,11 @@ After emptying, `bt` can still be used to transform **new** data.
 """
 function Base.empty!(bt::BoxCoxTransformation)
     empty!(bt.y)
-    empty!(bt.X)
+    isnothing(bt.X) || empty!(bt.X)
     return bt
 end
 
-Base.isempty(bt::BoxCoxTransformation) = any(isempty, [bt.y, bt.x])
+Base.isempty(bt::BoxCoxTransformation) = any(isempty, [bt.y, something(bt.X, [])])
 
 # TODO: Do more optimization error checking
 
@@ -220,7 +220,7 @@ The `opt_` keyword arguments are tolerances passed onto NLopt.
 function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1)
-    y = convert(Vector{Float64}, y)
+    y = float.(y)
     y ./= geomean(y)
     opt = NLopt.Opt(algorithm, 1)
     NLopt.xtol_abs!(opt, opt_atol) # relative criterion on parameter values
@@ -300,7 +300,7 @@ function _loglikelihood_boxcox(λ::Number, X::AbstractMatrix{<:Number}, y::Vecto
 end
 
 function _loglikelihood_boxcox(λ::Number, ::Nothing, y::Vector{<:Number}; kwargs...)
-    return   _loglikelihood_boxcox!(similar(y), y, λ)
+    return _loglikelihood_boxcox!(similar(y), y, λ)
 end
 
 StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
