@@ -69,8 +69,8 @@ end
     # log
     @test boxcox(0, 1) == boxcox(0)(1) == 0
     @test boxcox(1e-3, 1; atol=1e-2) == boxcox(1e-3; atol=1e-2)(1) == 0
-    @test boxcox(1, 0) == -1 
-    @test boxcox(2, 0) == -1/2  
+    @test boxcox(1, 0) == -1
+    @test boxcox(2, 0) == -1 / 2
 end
 
 @testset "show" begin
@@ -106,6 +106,6 @@ resultant transformation:
  y^2.0 - 1
 -----------
     2.0
-""" 
+"""
     @test sprint(show, bc) == output
 end
