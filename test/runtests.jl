@@ -5,6 +5,7 @@ using RDatasets: dataset as rdataset
 using StatsModels
 using Test
 
+struct FakeTransformation <: BoxCox.PowerTransformation end
 path(x) = joinpath(@__DIR__, "out", x)
 
 @testset "Aqua" begin
@@ -74,6 +75,9 @@ end
                 xlabel="parameter",
                 ylabel="LL")
     save(path("boxcox_formula.png"), bcpf)
+
+    @test_throws ArgumentError boxcoxplot(FakeTransformation())
+    @test_throws ArgumentError boxcoxplot!(ax, FakeTransformation())
 end
 
 @testset "boxcox function" begin
