@@ -68,5 +68,5 @@ end
     save(path("plot.png"), p)
 
     bcp = boxcoxplot(vol)
-    save(path("boxcox.png"), p)
+    save(path("boxcox.png"), bcp)
 end

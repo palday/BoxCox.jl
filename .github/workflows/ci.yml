@@ -49,15 +49,15 @@ jobs:
         with:
           file: lcov.info
       - name: Setup Node for Percy
-        if: ${{ matrix.version == '1.6' }}
+        if: ${{ matrix.version == '1' }}
         uses: actions/setup-node@v3
         with:
           node-version: '14'
       - name: Install Percy CI
-        if: ${{ matrix.version == '1.6' }}
+        if: ${{ matrix.version == '1' }}
         run: npm install --save-dev @percy/cli
       - name: Percy Upload
-        if: ${{ matrix.version == '1.6' }}
+        if: ${{ matrix.version == '1' }}
         run: |
           ls ./test/out/ # useful for debugging
           npx percy upload ./test/out

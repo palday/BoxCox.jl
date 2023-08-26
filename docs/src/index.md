@@ -105,4 +105,4 @@ end
 boxcoxplot(bc; conf_level=0.95)
 ```
 
-This last diagnostic plot suggests that λ = 0 is within the possible range of parameter values to consider.  λ = 0 corresponds to a logarithmic transformation; given that the other variables are log-transformed, this suggests that we should consider using a log transform for the response. 
+This last diagnostic plot suggests that λ = 0 is within the possible range of parameter values to consider.  λ = 0 corresponds to a logarithmic transformation; given that the other variables are log-transformed, this suggests that we should consider using a log transform for the response.
