@@ -19,7 +19,8 @@ export BoxCoxTransformation,
        boxcoxplot!,
        fit,
        loglikelihood,
-       nobs
+       nobs,
+       params
 
 """
     PowerTransformation
@@ -135,10 +136,10 @@ each element of that vector.
 !!! note
     A meaningful plot is only possible when `bc` has not been `empty!`'ed.
 
-!!! compat 1.6
+!!! compat "Julia 1.6"
    The plotting functionality is defined unconditionally.
 
-!!! compat 1.9
+!!! compat "Julia 1.9"
    The plotting functionality interface is defined as a package extension and only loaded when Makie is available.
 """
 function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
@@ -146,7 +147,7 @@ function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
     throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
 end
 
-@doc boxcoxplot!
+"$(@doc boxcoxplot!)"
 function boxcoxplot(::PowerTransformation; kwargs...)
     throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
 end
@@ -200,10 +201,10 @@ If a `FormulaTerm` is provided, then `X` is constructed using that specification
     The formula interface is only available if StatsModels.jl is loaded either directly or via another package 
     such GLM.jl or MixedModels.jl.
 
-!!! compat 1.6
+!!! compat "Julia 1.6"
    The formula interface is defined unconditionally, but `@formula` is not loaded.
 
-!!! compat 1.9
+!!! compat "Julia 1.9"
    The formula interface is defined as a package extension.
 
 `atol` controls the absolute tolerance for treating `λ` as zero.
@@ -301,6 +302,8 @@ function _loglikelihood_boxcox(λ::Number, ::Nothing, y::Vector{<:Number}; kwarg
 end
 
 StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
+
+StatsAPI.params(bc::BoxCoxTransformation) = [bc.λ]
 
 function _pvalue(bc::BoxCoxTransformation)
     llhat = loglikelihood(bc)

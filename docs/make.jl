@@ -1,4 +1,5 @@
 using Documenter
+using DocStringExtensions
 using BoxCox
 
 makedocs(; root=joinpath(dirname(pathof(BoxCox)), "..", "docs"),
