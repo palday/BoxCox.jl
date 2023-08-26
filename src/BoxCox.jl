@@ -1,6 +1,7 @@
 module BoxCox
 
 using Compat
+using DocStringExtensions
 using LinearAlgebra
 using NLopt
 using Printf
@@ -10,29 +11,91 @@ using StatsBase
 using StatsFuns
 
 export BoxCoxTransformation,
-       loglikelihood,
-       fit,
+       boxcox,
        confint,
-       nobs,
        boxcoxplot,
-       boxcoxplot!
+       boxcoxplot!,
+       fit,
+       loglikelihood,
+       nobs
 
+"""
+    PowerTransformation
+
+Abstract type representing [power transformations](https://en.wikipedia.org/wiki/Power_transform)
+such as the Box-Cox transformation.
+"""
 abstract type PowerTransformation end
 # struct BoxCoxTransformation <: PowerTransformation end
 # struct YeoJohnsonTransformation <: PowerTransformation end
 # struct BickelDoksumTransformation <: PowerTransformation end
 
+"""
+    struct BoxCoxTransformation <: PowerTransformation
+
+# Fields
+
+$(FIELDS)
+
+!!! note
+    All fields are considered internal and implementation details and may change at any time without 
+    being considered breaking.
+
+# Tips
+
+- To extract the λ parameter, use `params`.
+- The transformation is callable, meaning that you can do
+```@example
+bc = fit(BoxCoxTransformation, y)
+y_transformed = bc.(y)
+```
+- You can reduce the size of a BoxCoxTransformation in memory by using `empty!`, but certain diagnostics 
+  (e.g. plotting and computation of the loglikelihood will no longer be available).
+
+See also [`boxcoxplot`](@ref), [`params`](@ref), [`boxcox`](@ref).
+"""
 Base.@kwdef struct BoxCoxTransformation <: PowerTransformation
-    λ::Float64 # power
+    "The transformation paramter"
+    λ::Float64
+    "The original response, normalized by its geometric mean"
     y::Vector{Float64} # observed response normalized by its geometric mean
+    "A model matrix for the conditional distribution or `Nothing` for the unconditional distribution "
     X::Union{Nothing,Matrix{Float64}}
+    "Tolerance for comparing λ to zero. Default is 1e-8"
     atol::Float64 = 1e-8 # isapprox tolerance to round towards zero or one
 end
 
+"""
+    Base.isapprox(x::BoxCoxTransformation, y::BoxCoxTransformation; kwargs...)
+
+Compare the λ parameter of `x` and `y` for approximate equality. 
+
+`kwargs` are passed on to `isapprox` for the parameters.
+
+!!! note
+    Other internal structures of `BoxCoxTransformation` are not compared.
+"""
 function Base.isapprox(x::BoxCoxTransformation, y::BoxCoxTransformation; kwargs...)
     return isapprox(x.λ, y.λ; kwargs...)
 end
 
+"""
+    boxcox(λ; atol=0)
+    boxcox(λ, x; atol=0)
+
+Compute the Box-Cox transformation of x for the parameter value λ.
+
+`atol` controls the absolute tolerance for treating λ as zero.
+
+The one argument variant curries and creates a one-argument function of `x` for the given λ.
+
+See also [BoxCoxTransformation](@ref).
+
+# References
+
+Box, George E. P.; Cox, D. R. (1964). "An analysis of transformations". _Journal of the Royal Statistical Society_, Series B. 26 (2): 211--252.
+"""
+boxcox(λ; kwargs...) = x -> boxcox(λ, x; kwargs...) 
 function boxcox(λ, x; atol=0)
     if isapprox(λ, 0; atol)
         logx = log(x)
@@ -43,11 +106,62 @@ function boxcox(λ, x; atol=0)
     return (x^λ - 1) / λ
 end
 
+"""
+    (t::BoxCoxTransformation)(x::Number)
+
+Apply the estimated BoxCox transformation `t` to the number `x`.
+
+See also [`BoxCox`](@ref).
+"""
 function (t::BoxCoxTransformation)(x::Number)
     return boxcox(t.λ, x)
 end
 
-# stop carrying around the data
+
+"""
+    boxcoxplot(bc::BoxCoxTransformation; kwargs...)
+    boxcoxplot!(axis, bc::BoxCoxTransformation; λ=nothing, n_steps=21)
+
+Create a diagnostic plot for the Box-Cox transformation.
+
+If λ is `nothing`, the range of possible values for the λ paramter is automatically determined, 
+with a total of `n_steps`. If `λ` is a vector of numbers, then the λ parameter is evaluated at 
+each element of that vector.
+
+!!! note
+    You must load an appropriate Makie backend (e.g., CairoMakie or GLMakie) to actually render a plot.
+
+!!! note
+    A meaningful plot is only possible when `bc` has not been `empty!`'ed.
+
+!!! compat 1.6
+   The plotting functionality is defined unconditionally.
+
+!!! compat 1.9
+   The plotting functionality interface is defined as a package extension and only loaded when Makie is available.
+"""
+function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
+    # specialize slightly so that they can't just throw Any and get this message
+    throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
+end
+
+@doc boxcoxplot!
+function boxcoxplot(::PowerTransformation; kwargs...)
+    throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
+end
+
+
+"""
+    empty!(bt::BoxCoxTransformation)
+
+Empty internal storage of `bt`. 
+
+For transformations fit to a large amount of data, this can reduce the size in memory.
+However, it means that [`loglikelihood`](@ref), [`boxcoxplot`](@ref) and other functionality
+dependent on having access to the original data will no longer work.
+
+After emptying, `bt` can still be used to transform **new** data.
+"""
 function Base.empty!(bt::BoxCoxTransformation)
     empty!(bt.y)
     empty!(bt.X)
@@ -56,6 +170,50 @@ end
 
 Base.isempty(bt::BoxCoxTransformation) = any(isempty, [bt.y, bt.x])
 
+# TODO: Do more optimization error checking
+
+"""
+    StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
+                 algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
+                maxiter=-1)
+    StatsAPI.fit(::Type{BoxCoxTransformation}, X::AbstractMatrix{<:Number},
+                 y::AbstractVector{<:Number}; atol=1e-8,
+                 algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
+                 maxiter=-1)
+    StatsAPI.fit(::Type{BoxCoxTransformation}, formula::FormulaTerm, data;
+                 atol=1e-8,
+                 algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
+                 maxiter=-1)
+
+
+
+Find the optimal λ value for a Box-Cox transformation of the data.
+
+When no `X` is provided, `y` is treated as an unconditional distribution.
+
+When `X` is provided, `y` is treated as distribution conditional on the linear predictor defined by `X`.
+At each iteration step, a simple linear regression is fit to the transformed `y` with `X` as the model matrix.
+
+If a `FormulaTerm` is provided, then `X` is constructed using that specification and `data`.
+
+!!! note
+    The formula interface is only available if StatsModels.jl is loaded either directly or via another package 
+    such GLM.jl or MixedModels.jl.
+
+!!! compat 1.6
+   The formula interface is defined unconditionally, but `@formula` is not loaded.
+
+!!! compat 1.9
+   The formula interface is defined as a package extension.
+
+`atol` controls the absolute tolerance for treating `λ` as zero.
+
+The `opt_` keyword arguments are tolerances passed onto NLopt.
+
+`maxiter` specifies the maximum number of iterations to use in optimization; negative values place no restriciton.
+
+`algorithm` is a valid NLopt algorithm to use in optimization.
+"""
 function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1)
@@ -101,8 +259,13 @@ function StatsAPI.fit(::Type{BoxCoxTransformation}, X::AbstractMatrix{<:Number},
     return BoxCoxTransformation(; λ=only(λ), y, X, atol)
 end
 
-function _boxcox!(y_trans, y, λ)
-    for i in eachindex(y, y_trans)
+"""
+    _boxcox!(y_trans, y, λ; kwargs...)
+
+Internal method to compute `boxcox` at each element of `y` and store the result in `y_trans`.
+"""
+function _boxcox!(y_trans, y, λ; kwargs...)
+    for i in eachindex(y, y_trans; kwargs...)
         y_trans[i] = boxcox(λ, y[i])
     end
     return y_trans
@@ -110,14 +273,14 @@ end
 
 # pull this out so that we can use it in optimization
 function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, Xqr::Factorization,
-                                X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number)
-    _boxcox!(y_trans, y, λ)
+                                X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number; kwargs...)
+    _boxcox!(y_trans, y, λ; kwargs...)
     y_trans -= X * (Xqr \ y_trans)
     return _loglikelihood_boxcox(y_trans)
 end
 
-function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number)
-    _boxcox!(y_trans, y, λ)
+function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number; kwargs...)
+    _boxcox!(y_trans, y, λ; kwargs...)
     y_trans .-= mean(y_trans)
     return _loglikelihood_boxcox(y_trans)
 end
@@ -126,17 +289,16 @@ function _loglikelihood_boxcox(y_trans::Vector{<:Number})
     return -0.5 * length(y_trans) * log(sum(abs2, y_trans))
 end
 
-function _loglikelihood_boxcox(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number})
+function _loglikelihood_boxcox(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number}; kwargs...)
     return _loglikelihood_boxcox!(similar(y), qr(X), X, y, λ)
 end
 
-function _loglikelihood_boxcox(λ::Number, ::Nothing, y::Vector{<:Number})
+function _loglikelihood_boxcox(λ::Number, ::Nothing, y::Vector{<:Number}; kwargs...)
     return _loglikelihood_boxcox!(similar(y), y, λ)
 end
 
-# th = 0.670280702687321
-
 StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
+
 function _pvalue(bc::BoxCoxTransformation)
     llhat = loglikelihood(bc)
     ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
@@ -159,24 +321,8 @@ end
 #     return [only(λd), bc.λ + (bc.λ - only(λd))]
 # end
 
-_sse(bc::BoxCoxTransformation) = _sse(bc.λ, bc.X, bc.y)
-_sse(λ::Number, bc::BoxCoxTransformation) = _sse(λ, bc.X, bc.y)
 
-function _sse(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number})
-    y_trans = similar(y)
-    _boxcox!(y_trans, y, λ)
-    y_trans -= X * (Xqr \ y_trans)
-    return y_trans'y_trans
-end
-
-function _sse(λ::Number, ::Nothing, y::Vector{<:Number})
-    y_trans = similar(y)
-    _boxcox!(y_trans, y, λ)
-    y_trans .-= mean(y_trans)
-    return y_trans'y_trans
-end
-
-StatsAPI.loglikelihood(t::BoxCoxTransformation) = _loglikelihood_boxcox(t.λ, t.X, t.y)
+StatsAPI.loglikelihood(t::BoxCoxTransformation) = _loglikelihood_boxcox(t.λ, t.X, t.y; t.atol)
 
 function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, "Box-Cox transformation")
@@ -204,15 +350,6 @@ function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
 
     return nothing
-end
-
-# specialize slightly so that they can't just throw Any and get this message
-function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
-    throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
-end
-
-function boxcoxplot(::PowerTransformation; kwargs...)
-    throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
 end
 
 if !isdefined(Base, :get_extension)
