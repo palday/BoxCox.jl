@@ -6,7 +6,7 @@ using BoxCox: BoxCox,
               BoxCoxTransformation,
               _loglikelihood_boxcox!,
               loglikelihood,
-              qr, chisqinvcdf
+              qr, chisqinvcdf, @compat
 
 # XXX it would be great to have a 1-1 aspect ratio here,
 # but this seems like something that should be done upstream
@@ -23,7 +23,7 @@ function Makie.convert_arguments(P::Type{<:Union{Makie.Scatter,Makie.Lines}},
     end
     sort!(collect(λ))
 
-    (; X, y) = bc
+    @compat (; X, y) = bc
     ll = loglikelihood_boxcox(X, y, λ)
     return convert_arguments(P, λ, ll, args...; kwargs...)
 end
