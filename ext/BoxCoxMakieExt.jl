@@ -89,6 +89,7 @@ function Makie.plot!(p::BCPlot)
     bc = p[1][]
     n_steps = p.n_steps[]
     λ = p.λ[]
+    # TODO use splines
     scatterlines!(p, bc; λ, n_steps,
                   p.strokecolor, p.strokewidth, p.marker, p.markersize,
                   color=real_markercolor, p.linestyle, p.linewidth, p.colormap, # p.colorscale,
