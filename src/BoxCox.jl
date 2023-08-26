@@ -7,10 +7,13 @@ using Printf
 using Statistics
 using StatsAPI
 using StatsBase
+using StatsFuns
 
 export BoxCoxTransformation,
        loglikelihood,
        fit,
+       confint,
+       nobs,
        boxcoxplot,
        boxcoxplot!
 
@@ -51,12 +54,14 @@ function Base.empty!(bt::BoxCoxTransformation)
     return bt
 end
 
+Base.isempty(bt::BoxCoxTransformation) = any(isempty, [bt.y, bt.x])
+
 function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8, maxiter=-1)
     y = convert(Vector{Float64}, y)
     y ./= geomean(y)
     opt = NLopt.Opt(algorithm, 1)
-    NLopt.xtol_rel!(opt, opt_atol) # relative criterion on parameter values
+    NLopt.xtol_abs!(opt, opt_atol) # relative criterion on parameter values
     NLopt.xtol_rel!(opt, opt_rtol) # relative criterion on parameter values
     NLopt.maxeval!(opt, maxiter)
     local y_trans = similar(y)
@@ -79,7 +84,7 @@ function StatsAPI.fit(::Type{BoxCoxTransformation}, X::AbstractMatrix{<:Number},
     Xqr = qr(X)
 
     opt = NLopt.Opt(algorithm, 1)
-    NLopt.xtol_rel!(opt, opt_atol) # relative criterion on parameter values
+    NLopt.xtol_abs!(opt, opt_atol) # relative criterion on parameter values
     NLopt.xtol_rel!(opt, opt_rtol) # relative criterion on parameter values
     NLopt.maxeval!(opt, maxiter)
     local y_trans = similar(y)
@@ -123,12 +128,55 @@ function _loglikelihood_boxcox(λ::Number, ::Nothing, y::Vector{<:Number})
     return _loglikelihood_boxcox!(similar(y), y, λ)
 end
 
+# th = 0.670280702687321
+
+StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
+function _pvalue(bc::BoxCoxTransformation)
+    llhat = loglikelihood(bc)
+    ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
+    return  chisqcdf(1, 2 * (llhat - ll0))
+end
+
+# function StatsAPI.confint(bc::BoxCoxTransformation)
+#     ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
+
+#     lltarget = loglikelihood(bc) - chisqinvcdf(1, 0.95) / 2
+#     opt = NLopt.Opt(:LN_COBYLA, 1)
+#     NLopt.upper_bounds!(opt, bc.λ)
+#     function obj(λvec, g)
+#         isempty(g) || throw(ArgumentError("g should be empty for this objective"))
+#         llhat = _loglikelihood_boxcox(only(λvec), bc.X, bc.y)
+#         return min(llhat, lltarget)
+#     end
+#     opt.max_objective = obj
+#      (ll, λd, retval) = optimize(opt, [bc.λ - 1])
+#     return [only(λd), bc.λ + (bc.λ - only(λd))]
+# end
+
+_sse(bc::BoxCoxTransformation) = _sse(bc.λ, bc.X, bc.y)
+_sse(λ::Number, bc::BoxCoxTransformation) = _sse(λ, bc.X, bc.y)
+
+function _sse(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number})
+    y_trans = similar(y)
+    _boxcox!(y_trans, y, λ)
+    y_trans -= X * (Xqr \ y_trans)
+    return y_trans'y_trans
+end
+
+function _sse(λ::Number, ::Nothing, y::Vector{<:Number})
+    y_trans = similar(y)
+    _boxcox!(y_trans, y, λ)
+    y_trans .-= mean(y_trans)
+    return y_trans'y_trans
+end
+
+
 StatsAPI.loglikelihood(t::BoxCoxTransformation) = _loglikelihood_boxcox(t.λ, t.X, t.y)
 
 function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, "Box-Cox transformation")
-    println(io)
     @printf io "\nestimated λ: %.4f" t.λ
+    # println(io, "\np-value: ", StatsBase.PValue(_pvalue(t)))
     println(io, "\nresultant transformation:\n")
 
     if isapprox(t.λ, 1; t.atol)

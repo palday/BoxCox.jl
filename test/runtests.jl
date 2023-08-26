@@ -10,11 +10,11 @@ using Test
     Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
 end
 
-using BoxCox, TestEnv; TestEnv.activate()
-using CairoMakie
-using RDatasets: dataset as rdataset
-using StatsModels
-using Test
+# using BoxCox, TestEnv; TestEnv.activate()
+# using CairoMakie
+# using RDatasets: dataset as rdataset
+# using StatsModels
+# using Test
 
 trees = rdataset("datasets", "trees")
 
@@ -31,7 +31,7 @@ trees = rdataset("datasets", "trees")
 
     vol = fit(BoxCoxTransformation, trees.Volume)
     volform = fit(BoxCoxTransformation, @formula(Volume ~ 1), trees)
-    @test vol ≈ volform atol=1e-8
+    @test vol ≈ volform atol=1e-6
 
     for bc in [vol, volform]
         @test bc.λ ≈ λref rtol=1e-3

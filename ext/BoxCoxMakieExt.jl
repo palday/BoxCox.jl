@@ -6,7 +6,7 @@ using BoxCox: BoxCox,
     BoxCoxTransformation,
     _loglikelihood_boxcox!,
     loglikelihood,
-    qr
+    qr, chisqinvcdf
 
 # XXX it would be great to have a 1-1 aspect ratio here,
 # but this seems like something that should be done upstream
@@ -20,8 +20,7 @@ function Makie.convert_arguments(P::Type{<:Union{Makie.Scatter,Makie.Lines}}, bc
                                  λ=nothing, n_steps=21, kwargs...)
 
     if isnothing(λ)
-        λ =  bc.λ > 0 ? range(0, 2 * bc.λ; length=n_steps) :
-            range(2 * bc.λ, 0; length=n_steps)
+        λ = range(-4 * abs(bc.λ), 4 * abs(bc.λ); length=n_steps)
     end
     sort!(collect(λ))
 
@@ -126,6 +125,10 @@ function Makie.plot!(ax::Axis, P::Type{<:BCPlot}, allattrs::Makie.Attributes, bc
     # scatterlines!(ax, bc)
     # the ylim error doesn't happen if we do this here
     vlines!(ax, bc; bc.λ, linestyle=:dash)
+    if haskey(allattrs, :conf_level)
+        lltarget = loglikelihood(bc) - chisqinvcdf(1, allattrs.conf_level[]) / 2
+        hlines!(ax, lltarget; linestyle=:dash)
+    end
 
     return plot
 end
