@@ -22,7 +22,7 @@ abstract type PowerTransformation end
 # struct YeoJohnsonTransformation <: PowerTransformation end
 # struct BickelDoksumTransformation <: PowerTransformation end
 
-@kwdef struct BoxCoxTransformation <: PowerTransformation
+Base.@kwdef struct BoxCoxTransformation <: PowerTransformation
     λ::Float64 # power
     y::Vector{Float64} # observed response normalized by its geometric mean
     X::Union{Nothing,Matrix{Float64}}
