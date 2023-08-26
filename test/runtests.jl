@@ -8,7 +8,9 @@ using Test
 path(x) = joinpath(@__DIR__, "out", x)
 
 @testset "Aqua" begin
-    Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
+    @static if VERSION >= v"1.9"
+        Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
+    end
 end
 
 # using BoxCox, TestEnv; TestEnv.activate()
