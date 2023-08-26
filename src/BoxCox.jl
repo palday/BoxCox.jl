@@ -220,7 +220,8 @@ The `opt_` keyword arguments are tolerances passed onto NLopt.
 function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1)
-    y = float.(y)
+    any(<=(0), y) && throw(ArgumentError("all y values must be greater than zero"))
+    y = float.(y)  # we modify, so let's make a copy!
     y ./= geomean(y)
     opt = NLopt.Opt(algorithm, 1)
     NLopt.xtol_abs!(opt, opt_atol) # relative criterion on parameter values
@@ -242,6 +243,7 @@ function StatsAPI.fit(::Type{BoxCoxTransformation}, X::AbstractMatrix{<:Number},
                       y::AbstractVector{<:Number}; atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1)
+    any(<=(0), y) && throw(ArgumentError("all y values must be greater than zero"))
     y = float.(y) # we modify, so let's make a copy!
     y ./= geomean(y)
     X = convert(Matrix{Float64}, X)
