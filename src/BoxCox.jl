@@ -315,7 +315,18 @@ StatsAPI.params(bc::BoxCoxTransformation) = [bc.λ]
 #     return chisqcdf(1, 2 * (llhat - ll0))
 # end
 
-function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95)
+"""
+    StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95, fast::Bool=true)
+
+Compute confidence intervals for λ, with confidence level level (by default 95%).
+
+If `fast`, then a symmetric confidence interval around ̂λ is assumed and the upper bound
+is computed using the difference between the lower bound and λ. Symmetry is generally a
+safe assumption for approximate values and halves computation time.
+
+If not `fast`, then the lower and upper bounds are computed separately.
+"""
+function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95, fast::Bool=true)
     # ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
 
     lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
@@ -339,11 +350,14 @@ function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95)
     (ll, λvec, retval) = optimize(opt, [bc.λ - 1])
     lower = only(λvec)
 
-    NLopt.lower_bounds!(opt, bc.λ)
-    NLopt.upper_bounds!(opt, Inf)
-    (ll, λvec, retval) = optimize(opt, [bc.λ + 1])
-    upper = only(λvec)
-
+    if fast
+        upper = (bc.λ - lower) + bc.λ
+    else
+        NLopt.lower_bounds!(opt, bc.λ)
+        NLopt.upper_bounds!(opt, Inf)
+        (ll, λvec, retval) = optimize(opt, [bc.λ + 1])
+        upper = only(λvec)
+    end
     return [lower, upper]
 end
 

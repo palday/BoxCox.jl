@@ -20,7 +20,7 @@ function Makie.convert_arguments(P::Type{<:Union{Makie.Scatter,Makie.Lines}},
     if isnothing(λ)
         # TODO: cache this somehow so we're not computing it twice
         # when also plotting the CI
-        ci = confint(bc)
+        ci = confint(bc; fast=true)
         lower = first(ci) - 0.05 * abs(first(ci))
         upper = last(ci) + 0.05 * abs(last(ci))
         λ = range(lower, upper; length=n_steps)
@@ -132,9 +132,10 @@ function Makie.plot!(ax::Axis, P::Type{<:BCPlot}, allattrs::Makie.Attributes, bc
         level = allattrs.conf_level[]
         lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
         hlines!(ax, lltarget; linestyle=:dash, color=:black)
-        ci = confint(bc; level)
+        ci = confint(bc; level, fast=nobs(bc) > 1e4)
         vlines!(ax, ci; linestyle=:dash, color=:black)
-        text!(ax, first(ci) + 0.05 * abs(first(ci)), lltarget; text="$(100 * level)% CI")
+        text = "$(round(Int, 100 * level))% CI"
+        text!(ax, first(ci) + 0.05 * abs(first(ci)), lltarget; text)
     end
     return plot
 end
