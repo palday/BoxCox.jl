@@ -320,21 +320,29 @@ function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95)
 
     lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
     opt = NLopt.Opt(:LN_BOBYQA, 1)
-    NLopt.upper_bounds!(opt, bc.λ)
+    Xqr = isnothing(bc.X) ? nothing : qr(X)
+    y_trans = similar(y)
     function obj(λvec, g)
         isempty(g) || throw(ArgumentError("g should be empty for this objective"))
-        llhat = _loglikelihood_boxcox(only(λvec), bc.X, bc.y)
+        llhat = if isnothing(bc.X)
+            _loglikelihood_boxcox!(y_trans, bc.y, only(λvec))
+        else
+            _loglikelihood_boxcox!(y_trans, Xqr, bc.X, bc.y, only(λvec))
+        end
         # want this to be zero
         val = abs(llhat - lltarget)
         return val
     end
     opt.min_objective = obj
-    (ll, λ, retval) = optimize(opt, [bc.λ - 1])
-    lower = only(λ)
+
+    NLopt.upper_bounds!(opt, bc.λ)
+    (ll, λvec, retval) = optimize(opt, [bc.λ - 1])
+    lower = only(λvec)
+
     NLopt.lower_bounds!(opt, bc.λ)
     NLopt.upper_bounds!(opt, Inf)
-    (ll, λ, retval) = optimize(opt, [bc.λ + 1])
-    upper = only(λ)
+    (ll, λvec, retval) = optimize(opt, [bc.λ + 1])
+    upper = only(λvec)
 
     return [lower, upper]
 end
