@@ -54,6 +54,33 @@ end
     @test loglikelihood(bcmass) ≈ 26.409734148606 rtol = 1e-3
 end
 
+@testset "confint" begin
+    y = [-0.174865, -0.312804, -1.06157, 1.20795, 0.573458, 0.0566415, 0.0481339, 1.98065,
+         -0.196412, -0.464189]
+    y2 = abs2.(y)
+    X = ones(length(y), 1)
+    # > y <- c(-0.174865, -0.312804, -1.06157, 1.20795, 0.573458, 0.0566415, 0.0481339, 1.98065,
+    #      -0.196412, -0.464189)
+    # > y2 <- y * y
+    # > bc <- boxcox(y2 ~ 1, data=data.frame(y, y2), lambda=seq(-1, 1, 1e-5))
+    # > bc$x[which.max(bc$y)]
+    # [1] 0.06358
+    # > ci <- bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
+    # > c(min(ci), max(ci))
+    # [1] -0.22141  0.35783
+
+    ci = [-0.22141, 0.35783]
+    bc1 = fit(BoxCoxTransformation, y2)
+    bc2 = fit(BoxCoxTransformation, X, y2)
+    for bc in [bc1, bc2]
+        @test only(params(bc)) ≈ 0.06358 atol = 1e-5
+        @test all(isapprox.(confint(bc; fast=false), ci; atol=1e-4))
+    end
+    for bc in [bc1, bc2]
+        @test all(isapprox.(confint(bc; fast=true), ci; atol=1e-2))
+    end
+end
+
 @testset "plotting" begin
     vol = fit(BoxCoxTransformation, trees.Volume)
     qq = qqnorm(vol)

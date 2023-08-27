@@ -43,7 +43,7 @@ abstract type PowerTransformation end
 $(FIELDS)
 
 !!! note
-    All fields are considered internal and implementation details and may change at any time without 
+    All fields are considered internal and implementation details and may change at any time without
     being considered breaking.
 
 # Tips
@@ -54,7 +54,7 @@ $(FIELDS)
 bc = fit(BoxCoxTransformation, y)
 y_transformed = bc.(y)
 ```
-- You can reduce the size of a BoxCoxTransformation in memory by using `empty!`, but certain diagnostics 
+- You can reduce the size of a BoxCoxTransformation in memory by using `empty!`, but certain diagnostics
   (e.g. plotting and computation of the loglikelihood will no longer be available).
 
 See also [`boxcoxplot`](@ref), [`params`](@ref), [`boxcox`](@ref).
@@ -73,7 +73,7 @@ end
 """
     Base.isapprox(x::BoxCoxTransformation, y::BoxCoxTransformation; kwargs...)
 
-Compare the λ parameter of `x` and `y` for approximate equality. 
+Compare the λ parameter of `x` and `y` for approximate equality.
 
 `kwargs` are passed on to `isapprox` for the parameters.
 
@@ -128,8 +128,8 @@ end
 
 Create a diagnostic plot for the Box-Cox transformation.
 
-If λ is `nothing`, the range of possible values for the λ paramter is automatically determined, 
-with a total of `n_steps`. If `λ` is a vector of numbers, then the λ parameter is evaluated at 
+If λ is `nothing`, the range of possible values for the λ paramter is automatically determined,
+with a total of `n_steps`. If `λ` is a vector of numbers, then the λ parameter is evaluated at
 each element of that vector.
 
 !!! note
@@ -157,7 +157,7 @@ end
 """
     empty!(bt::BoxCoxTransformation)
 
-Empty internal storage of `bt`. 
+Empty internal storage of `bt`.
 
 For transformations fit to a large amount of data, this can reduce the size in memory.
 However, it means that [`loglikelihood`](@ref), [`boxcoxplot`](@ref) and other functionality
@@ -200,7 +200,7 @@ At each iteration step, a simple linear regression is fit to the transformed `y`
 If a `FormulaTerm` is provided, then `X` is constructed using that specification and `data`.
 
 !!! note
-    The formula interface is only available if StatsModels.jl is loaded either directly or via another package 
+    The formula interface is only available if StatsModels.jl is loaded either directly or via another package
     such GLM.jl or MixedModels.jl.
 
 !!! compat "Julia 1.6"
@@ -315,21 +315,52 @@ StatsAPI.params(bc::BoxCoxTransformation) = [bc.λ]
 #     return chisqcdf(1, 2 * (llhat - ll0))
 # end
 
-# function StatsAPI.confint(bc::BoxCoxTransformation)
-#     ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
+"""
+    StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95, fast::Bool=nobs(bc) > 10_000)
 
-#     lltarget = loglikelihood(bc) - chisqinvcdf(1, 0.95) / 2
-#     opt = NLopt.Opt(:LN_COBYLA, 1)
-#     NLopt.upper_bounds!(opt, bc.λ)
-#     function obj(λvec, g)
-#         isempty(g) || throw(ArgumentError("g should be empty for this objective"))
-#         llhat = _loglikelihood_boxcox(only(λvec), bc.X, bc.y)
-#         return min(llhat, lltarget)
-#     end
-#     opt.max_objective = obj
-#      (ll, λd, retval) = optimize(opt, [bc.λ - 1])
-#     return [only(λd), bc.λ + (bc.λ - only(λd))]
-# end
+Compute confidence intervals for λ, with confidence level level (by default 95%).
+
+If `fast`, then a symmetric confidence interval around ̂λ is assumed and the upper bound
+is computed using the difference between the lower bound and λ. Symmetry is generally a
+safe assumption for approximate values and halves computation time.
+
+If not `fast`, then the lower and upper bounds are computed separately.
+"""
+function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95,
+                          fast::Bool=nobs(bc) > 10_000)
+    # ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
+
+    lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
+    opt = NLopt.Opt(:LN_BOBYQA, 1)
+    Xqr = isnothing(bc.X) ? nothing : qr(bc.X)
+    y_trans = similar(bc.y)
+    function obj(λvec, g)
+        isempty(g) || throw(ArgumentError("g should be empty for this objective"))
+        llhat = if isnothing(bc.X)
+            _loglikelihood_boxcox!(y_trans, bc.y, only(λvec))
+        else
+            _loglikelihood_boxcox!(y_trans, Xqr, bc.X, bc.y, only(λvec))
+        end
+        # want this to be zero
+        val = abs(llhat - lltarget)
+        return val
+    end
+    opt.min_objective = obj
+
+    NLopt.upper_bounds!(opt, bc.λ)
+    (ll, λvec, retval) = optimize(opt, [bc.λ - 1])
+    lower = only(λvec)
+
+    if fast
+        upper = (bc.λ - lower) + bc.λ
+    else
+        NLopt.lower_bounds!(opt, bc.λ)
+        NLopt.upper_bounds!(opt, Inf)
+        (ll, λvec, retval) = optimize(opt, [bc.λ + 1])
+        upper = only(λvec)
+    end
+    return [lower, upper]
+end
 
 function StatsAPI.loglikelihood(t::BoxCoxTransformation)
     return _loglikelihood_boxcox(t.λ, t.X, t.y; t.atol)

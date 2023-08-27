@@ -18,7 +18,12 @@ function Makie.convert_arguments(P::Type{<:Union{Makie.Scatter,Makie.Lines}},
                                  bc::BoxCoxTransformation, args...;
                                  λ=nothing, n_steps=21, kwargs...)
     if isnothing(λ)
-        λ = range(-4 * abs(bc.λ), 4 * abs(bc.λ); length=n_steps)
+        # TODO: cache this somehow so we're not computing it twice
+        # when also plotting the CI
+        ci = confint(bc; fast=true)
+        lower = first(ci) - 0.05 * abs(first(ci))
+        upper = last(ci) + 0.05 * abs(last(ci))
+        λ = range(lower, upper; length=n_steps)
     end
     sort!(collect(λ))
 
@@ -122,12 +127,16 @@ function Makie.plot!(ax::Axis, P::Type{<:BCPlot}, allattrs::Makie.Attributes, bc
     end
     # scatterlines!(ax, bc)
     # the ylim error doesn't happen if we do this here
-    vlines!(ax, bc; bc.λ, linestyle=:dash)
+    vlines!(ax, bc; bc.λ, linestyle=:dash, color=:black)
     if haskey(allattrs, :conf_level)
-        lltarget = loglikelihood(bc) - chisqinvcdf(1, allattrs.conf_level[]) / 2
-        hlines!(ax, lltarget; linestyle=:dash)
+        level = allattrs.conf_level[]
+        lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
+        hlines!(ax, lltarget; linestyle=:dash, color=:black)
+        ci = confint(bc; level)
+        vlines!(ax, ci; linestyle=:dash, color=:black)
+        text = "$(round(Int, 100 * level))% CI"
+        text!(ax, first(ci) + 0.05 * abs(first(ci)), lltarget; text)
     end
-
     return plot
 end
 
