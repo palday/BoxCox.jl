@@ -139,10 +139,10 @@ each element of that vector.
     A meaningful plot is only possible when `bc` has not been `empty!`'ed.
 
 !!! compat "Julia 1.6"
-   The plotting functionality is defined unconditionally.
+    The plotting functionality is defined unconditionally.
 
 !!! compat "Julia 1.9"
-   The plotting functionality interface is defined as a package extension and only loaded when Makie is available.
+    The plotting functionality interface is defined as a package extension and only loaded when Makie is available.
 """
 function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
     # specialize slightly so that they can't just throw Any and get this message
@@ -204,10 +204,10 @@ If a `FormulaTerm` is provided, then `X` is constructed using that specification
     such GLM.jl or MixedModels.jl.
 
 !!! compat "Julia 1.6"
-   The formula interface is defined unconditionally, but `@formula` is not loaded.
+    The formula interface is defined unconditionally, but `@formula` is not loaded.
 
 !!! compat "Julia 1.9"
-   The formula interface is defined as a package extension.
+    The formula interface is defined as a package extension.
 
 `atol` controls the absolute tolerance for treating `λ` as zero.
 
