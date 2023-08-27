@@ -316,7 +316,7 @@ StatsAPI.params(bc::BoxCoxTransformation) = [bc.λ]
 # end
 
 """
-    StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95, fast::Bool=true)
+    StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95, fast::Bool=nobs(bc) > 10_000)
 
 Compute confidence intervals for λ, with confidence level level (by default 95%).
 
@@ -326,7 +326,8 @@ safe assumption for approximate values and halves computation time.
 
 If not `fast`, then the lower and upper bounds are computed separately.
 """
-function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95, fast::Bool=true)
+function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95,
+                          fast::Bool=nobs(bc) > 10_000)
     # ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
 
     lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2

@@ -132,7 +132,7 @@ function Makie.plot!(ax::Axis, P::Type{<:BCPlot}, allattrs::Makie.Attributes, bc
         level = allattrs.conf_level[]
         lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
         hlines!(ax, lltarget; linestyle=:dash, color=:black)
-        ci = confint(bc; level, fast=nobs(bc) > 1e4)
+        ci = confint(bc; level)
         vlines!(ax, ci; linestyle=:dash, color=:black)
         text = "$(round(Int, 100 * level))% CI"
         text!(ax, first(ci) + 0.05 * abs(first(ci)), lltarget; text)
