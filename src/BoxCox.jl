@@ -320,8 +320,8 @@ function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95)
 
     lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
     opt = NLopt.Opt(:LN_BOBYQA, 1)
-    Xqr = isnothing(bc.X) ? nothing : qr(X)
-    y_trans = similar(y)
+    Xqr = isnothing(bc.X) ? nothing : qr(bc.X)
+    y_trans = similar(bc.y)
     function obj(λvec, g)
         isempty(g) || throw(ArgumentError("g should be empty for this objective"))
         llhat = if isnothing(bc.X)
