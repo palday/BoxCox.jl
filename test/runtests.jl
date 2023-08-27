@@ -73,11 +73,10 @@ end
     bc1 = fit(BoxCoxTransformation, y2)
     bc2 = fit(BoxCoxTransformation, X, y2)
     for bc in [bc1, bc2]
-        @test only(params(bc)) ≈ 0.06358 atol=1e-5
+        @test only(params(bc)) ≈ 0.06358 atol = 1e-5
         @test all(isapprox.(confint(bc), ci; atol=1e-5))
     end
 end
-
 
 @testset "plotting" begin
     vol = fit(BoxCoxTransformation, trees.Volume)
