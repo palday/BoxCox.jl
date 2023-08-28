@@ -59,15 +59,19 @@ y_transformed = bc.(y)
 
 See also [`boxcoxplot`](@ref), [`params`](@ref), [`boxcox`](@ref).
 """
-Base.@kwdef struct BoxCoxTransformation <: PowerTransformation
-    "The transformation paramter"
+Base.@kwdef struct BoxCoxTransformation{T} <: PowerTransformation
+    "The transformation parameter"
     λ::Float64
     "The original response, normalized by its geometric mean"
     y::Vector{Float64} # observed response normalized by its geometric mean
     "A model matrix for the conditional distribution or `Nothing` for the unconditional distribution "
-    X::Union{Nothing,Matrix{Float64}}
+    X::T
     "Tolerance for comparing λ to zero. Default is 1e-8"
     atol::Float64 = 1e-8 # isapprox tolerance to round towards zero or one
+end
+
+function BoxCoxTransformation(λ::Number, y::Vector, X::T, atol::Number) where {T}
+    return BoxCoxTransformation{T}(; λ, y, X, atol)
 end
 
 """
@@ -165,9 +169,10 @@ dependent on having access to the original data will no longer work.
 
 After emptying, `bt` can still be used to transform **new** data.
 """
-function Base.empty!(bt::BoxCoxTransformation)
+function Base.empty!(bt::BoxCoxTransformation{T}) where {T}
     empty!(bt.y)
-    isnothing(bt.X) || empty!(bt.X)
+    # is there a way to make this work for matrices, mixed models, etc.?
+    hasmethod(empty!, (T,)) && empty!(bt.X)
     return bt
 end
 
@@ -187,6 +192,11 @@ Base.isempty(bt::BoxCoxTransformation) = any(isempty, [bt.y, something(bt.X, [])
                  atol=1e-8,
                  algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                  maxiter=-1)
+    StatsAPI.fit(::Type{BoxCoxTransformation}, model::LinearMixedModel;
+                 atol=1e-8, progress=true,
+                 algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
+                 maxiter=-1)
+
 
 
 
@@ -199,15 +209,19 @@ At each iteration step, a simple linear regression is fit to the transformed `y`
 
 If a `FormulaTerm` is provided, then `X` is constructed using that specification and `data`.
 
+If a `LinearMixedModel` is provided, then `X` and `y` are extracted from the model object.
+
 !!! note
     The formula interface is only available if StatsModels.jl is loaded either directly or via another package
     such GLM.jl or MixedModels.jl.
 
 !!! compat "Julia 1.6"
-    The formula interface is defined unconditionally, but `@formula` is not loaded.
+    - The formula interface is defined unconditionally, but `@formula` is not loaded.
+    - The MixedModels interface is defined unconditionally.
 
 !!! compat "Julia 1.9"
-    The formula interface is defined as a package extension.
+    - The formula interface is defined as a package extension.
+    - The MixedModels interface is defined as a package extension.
 
 `atol` controls the absolute tolerance for treating `λ` as zero.
 
@@ -216,6 +230,8 @@ The `opt_` keyword arguments are tolerances passed onto NLopt.
 `maxiter` specifies the maximum number of iterations to use in optimization; negative values place no restriciton.
 
 `algorithm` is a valid NLopt algorithm to use in optimization.
+
+`progress` enables progress bars for intermediate model fits during the optimization process.
 """
 function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
@@ -395,8 +411,9 @@ function Base.show(io::IO, t::BoxCoxTransformation)
 end
 
 if !isdefined(Base, :get_extension)
-    include("../ext/BoxCoxStatsModelsExt.jl")
     include("../ext/BoxCoxMakieExt.jl")
+    include("../ext/BoxCoxMixedModelsExt.jl")
+    include("../ext/BoxCoxStatsModelsExt.jl")
 end
 
 @setup_workload begin
