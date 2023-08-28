@@ -4,6 +4,7 @@ using BoxCox
 using Makie
 
 using BoxCox: _loglikelihood_boxcox!,
+              _loglikelihood_boxcox,
               qr, chisqinvcdf, @compat,
               @setup_workload, @compile_workload
 
@@ -28,11 +29,12 @@ function Makie.convert_arguments(P::Type{<:Union{Makie.Scatter,Makie.Lines}},
     sort!(collect(λ))
 
     @compat (; X, y) = bc
-    ll = loglikelihood_boxcox(X, y, λ)
+    ll = _loglikelihood_boxcox(X, y, λ)
     return convert_arguments(P, λ, ll, args...; kwargs...)
 end
 
-function loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number}, λ)
+function BoxCox._loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
+                                      λ::AbstractVector{<:Number})
     y_trans = similar(y)
     ll = similar(λ)
     Xqr = qr(X)
@@ -42,7 +44,8 @@ function loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number}, 
     return ll
 end
 
-function loglikelihood_boxcox(::Nothing, y::Vector{<:Number}, λ)
+function BoxCox._loglikelihood_boxcox(::Nothing, y::Vector{<:Number},
+                                      λ::AbstractVector{<:Number})
     y_trans = similar(y)
     ll = similar(λ)
     for i in eachindex(ll, λ)

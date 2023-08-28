@@ -1,6 +1,8 @@
 using Aqua
 using BoxCox
 using CairoMakie
+using MixedModels
+using MixedModels: dataset
 using RDatasets: dataset as rdataset
 using StatsModels
 using Test
@@ -150,4 +152,21 @@ resultant transformation:
     2.0
 """
     @test sprint(show, bc) == output
+end
+
+@testset "mixed models" begin
+    model = fit(MixedModel, @formula(reaction ~ 1 + days + (1 + days | subj)),
+                dataset(:sleepstudy))
+    bc = fit(BoxCoxTransformation, model; progress=true)
+    @test only(params(bc)) ≈ -1 atol = 0.1
+    ci = confint(bc; fast=false)
+    ref_ci = [-2.0747195, -0.0747195]
+    @test all(isapprox.(confint(bc; fast=true), ci))
+    @test all(isapprox.(ci, ref_ci; atol=1e-6))
+
+    @testset "mixed models + makie integration" begin
+        bcpmm = boxcoxplot(bc; conf_level=0.95, title="sleep study should use speed")
+        @test bcpmm isa Makie.FigureAxisPlot
+        save(path("boxcox_mixedmodel.png"), bcpmm)
+    end
 end

@@ -71,7 +71,7 @@ Base.@kwdef struct BoxCoxTransformation{T} <: PowerTransformation
 end
 
 function BoxCoxTransformation(λ::Number, y::Vector, X::T, atol::Number) where {T}
-    BoxCoxTransformation{T}(; λ, y, X, atol)
+    return BoxCoxTransformation{T}(; λ, y, X, atol)
 end
 
 """
@@ -191,6 +191,11 @@ Base.isempty(bt::BoxCoxTransformation) = any(isempty, [bt.y, something(bt.X, [])
                  atol=1e-8,
                  algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                  maxiter=-1)
+    StatsAPI.fit(::Type{BoxCoxTransformation}, model::LinearMixedModel;
+                 atol=1e-8, progress=true,
+                 algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
+                 maxiter=-1)
+
 
 
 
@@ -203,6 +208,8 @@ At each iteration step, a simple linear regression is fit to the transformed `y`
 
 If a `FormulaTerm` is provided, then `X` is constructed using that specification and `data`.
 
+If a `LinearMixedModel` is provided, then `X` and `y` are extracted from the model object.
+
 !!! note
     The formula interface is only available if StatsModels.jl is loaded either directly or via another package
     such GLM.jl or MixedModels.jl.
@@ -210,8 +217,14 @@ If a `FormulaTerm` is provided, then `X` is constructed using that specification
 !!! compat "Julia 1.6"
     The formula interface is defined unconditionally, but `@formula` is not loaded.
 
+!!! compat "Julia 1.6"
+    The MixedModels interface is defined unconditionally.
+
 !!! compat "Julia 1.9"
     The formula interface is defined as a package extension.
+
+!!! compat "Julia 1.9"
+    The MixedModels interface is defined as a package extension.
 
 `atol` controls the absolute tolerance for treating `λ` as zero.
 
@@ -220,6 +233,8 @@ The `opt_` keyword arguments are tolerances passed onto NLopt.
 `maxiter` specifies the maximum number of iterations to use in optimization; negative values place no restriciton.
 
 `algorithm` is a valid NLopt algorithm to use in optimization.
+
+`progress` enables progress bars for intermediate model fits during the optimization process.
 """
 function StatsAPI.fit(::Type{BoxCoxTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
