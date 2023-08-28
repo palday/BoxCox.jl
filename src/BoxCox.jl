@@ -59,15 +59,19 @@ y_transformed = bc.(y)
 
 See also [`boxcoxplot`](@ref), [`params`](@ref), [`boxcox`](@ref).
 """
-Base.@kwdef struct BoxCoxTransformation <: PowerTransformation
+Base.@kwdef struct BoxCoxTransformation{T} <: PowerTransformation
     "The transformation paramter"
     λ::Float64
     "The original response, normalized by its geometric mean"
     y::Vector{Float64} # observed response normalized by its geometric mean
     "A model matrix for the conditional distribution or `Nothing` for the unconditional distribution "
-    X::Union{Nothing,Matrix{Float64}}
+    X::T
     "Tolerance for comparing λ to zero. Default is 1e-8"
     atol::Float64 = 1e-8 # isapprox tolerance to round towards zero or one
+end
+
+function BoxCoxTransformation(λ::Number, y::Vector, X::T, atol::Number) where {T}
+    BoxCoxTransformation{T}(; λ, y, X, atol)
 end
 
 """
