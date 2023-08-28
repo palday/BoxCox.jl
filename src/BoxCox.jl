@@ -171,9 +171,8 @@ After emptying, `bt` can still be used to transform **new** data.
 """
 function Base.empty!(bt::BoxCoxTransformation{T}) where {T}
     empty!(bt.y)
-    if hasmethod(empty!, (T,))
-        empty!(bt.X)
-    end
+    # is there a way to make this work for matrices, mixed models, etc.?
+    hasmethod(empty!, (T,)) && empty!(bt.X)
     return bt
 end
 
