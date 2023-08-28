@@ -216,16 +216,12 @@ If a `LinearMixedModel` is provided, then `X` and `y` are extracted from the mod
     such GLM.jl or MixedModels.jl.
 
 !!! compat "Julia 1.6"
-    The formula interface is defined unconditionally, but `@formula` is not loaded.
-
-!!! compat "Julia 1.6"
-    The MixedModels interface is defined unconditionally.
+    - The formula interface is defined unconditionally, but `@formula` is not loaded.
+    - The MixedModels interface is defined unconditionally.
 
 !!! compat "Julia 1.9"
-    The formula interface is defined as a package extension.
-
-!!! compat "Julia 1.9"
-    The MixedModels interface is defined as a package extension.
+    - The formula interface is defined as a package extension.
+    - The MixedModels interface is defined as a package extension.
 
 `atol` controls the absolute tolerance for treating `λ` as zero.
 
