@@ -155,9 +155,10 @@ resultant transformation:
 end
 
 @testset "mixed models" begin
+    progress = false
     model = fit(MixedModel, @formula(reaction ~ 1 + days + (1 + days | subj)),
-                dataset(:sleepstudy))
-    bc = fit(BoxCoxTransformation, model; progress=true)
+                dataset(:sleepstudy); progress)
+    bc = fit(BoxCoxTransformation, model; progress)
     @test only(params(bc)) ≈ -1 atol = 0.1
     ci = confint(bc; fast=false)
     ref_ci = [-2.0747195, -0.0747195]

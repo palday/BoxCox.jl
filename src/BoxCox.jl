@@ -60,7 +60,7 @@ y_transformed = bc.(y)
 See also [`boxcoxplot`](@ref), [`params`](@ref), [`boxcox`](@ref).
 """
 Base.@kwdef struct BoxCoxTransformation{T} <: PowerTransformation
-    "The transformation paramter"
+    "The transformation parameter"
     λ::Float64
     "The original response, normalized by its geometric mean"
     y::Vector{Float64} # observed response normalized by its geometric mean
