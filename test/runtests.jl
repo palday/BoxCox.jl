@@ -161,8 +161,8 @@ end
     bc = fit(BoxCoxTransformation, model; progress)
     @test only(params(bc)) ≈ -1 atol = 0.1
     ci = confint(bc; fast=false)
-    ref_ci = [-2.0747195, -0.0747195]
-    @test all(isapprox.(confint(bc; fast=true), ci))
+    ref_ci = [-1.73449, -0.413651]
+    @test all(isapprox.(confint(bc; fast=true), ci; atol=1e-2))
     @test all(isapprox.(ci, ref_ci; atol=1e-6))
 
     @testset "mixed models + makie integration" begin

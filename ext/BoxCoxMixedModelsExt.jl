@@ -53,7 +53,7 @@ function StatsAPI.confint(bc::BoxCoxTransformation{LinearMixedModel}; level::Rea
     y_trans = similar(bc.y)
     function obj(λvec, g)
         isempty(g) || throw(ArgumentError("g should be empty for this objective"))
-        llhat = _loglikelihood_boxcox!(y_trans, bc.model, bc.y, only(λvec); progress)
+        llhat = _loglikelihood_boxcox!(y_trans, bc.X, bc.y, only(λvec); progress)
         # want this to be zero
         val = abs(llhat - lltarget)
         return val
