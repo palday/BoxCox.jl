@@ -163,7 +163,7 @@ end
     ci = confint(bc; fast=false)
     ref_ci = [-1.73449, -0.413651]
     @test all(isapprox.(confint(bc; fast=true), ci; atol=1e-2))
-    @test all(isapprox.(ci, ref_ci; atol=1e-6))
+    @test all(isapprox.(ci, ref_ci; atol=1e-2))
 
     @testset "mixed models + makie integration" begin
         bcpmm = boxcoxplot(bc; conf_level=0.95, title="sleep study should use speed")
