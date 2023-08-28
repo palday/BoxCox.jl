@@ -35,11 +35,6 @@ function StatsAPI.fit(::Type{BoxCoxTransformation}, model::LinearMixedModel; pro
     return BoxCoxTransformation{LinearMixedModel}(; λ=only(λ), y, X=model, kwargs...)
 end
 
-function Base.empty!(bc::BoxCoxTransformation{LinearMixedModel})
-    empty!(bc.y)
-    return bc
-end
-
 function BoxCox._loglikelihood_boxcox!(y_trans::Vector{<:Number}, model::LinearMixedModel,
                                        y::Vector{<:Number}, λ::Number;
                                        progress=true, kwargs...)

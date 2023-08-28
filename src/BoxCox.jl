@@ -169,9 +169,11 @@ dependent on having access to the original data will no longer work.
 
 After emptying, `bt` can still be used to transform **new** data.
 """
-function Base.empty!(bt::BoxCoxTransformation)
+function Base.empty!(bt::BoxCoxTransformation{T}) where {T}
     empty!(bt.y)
-    isnothing(bt.X) || empty!(bt.X)
+    if hasmethod(empty!, (T,))
+        empty!(bt.X)
+    end
     return bt
 end
 
@@ -414,8 +416,9 @@ function Base.show(io::IO, t::BoxCoxTransformation)
 end
 
 if !isdefined(Base, :get_extension)
-    include("../ext/BoxCoxStatsModelsExt.jl")
     include("../ext/BoxCoxMakieExt.jl")
+    include("../ext/BoxCoxMixedModelsExt.jl")
+    include("../ext/BoxCoxStatsModelsExt.jl")
 end
 
 @setup_workload begin
