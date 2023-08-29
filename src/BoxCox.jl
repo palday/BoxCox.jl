@@ -13,6 +13,7 @@ using StatsAPI
 using StatsBase
 using StatsFuns
 
+# XXX I have no idea why this is necessary, but otherwise isdefined(BoxCox, :params) returns false
 using StatsAPI: params
 
 export BoxCoxTransformation,
@@ -36,7 +37,7 @@ abstract type PowerTransformation end
 # struct BickelDoksumTransformation <: PowerTransformation end
 
 """
-    struct BoxCoxTransformation <: PowerTransformation
+    BoxCoxTransformation <: PowerTransformation
 
 # Fields
 
@@ -81,7 +82,7 @@ Compare the λ parameter of `x` and `y` for approximate equality.
     Other internal structures of `BoxCoxTransformation` are not compared.
 """
 function Base.isapprox(x::BoxCoxTransformation, y::BoxCoxTransformation; kwargs...)
-    return isapprox(x.λ, y.λ; kwargs...)
+    return all(isapprox.(params(x), params(y); kwargs...))
 end
 
 """
@@ -94,7 +95,7 @@ Compute the Box-Cox transformation of x for the parameter value λ.
 
 The one argument variant curries and creates a one-argument function of `x` for the given λ.
 
-See also [BoxCoxTransformation](@ref).
+See also [`BoxCoxTransformation`](@ref).
 
 # References
 
@@ -116,7 +117,7 @@ end
 
 Apply the estimated BoxCox transformation `t` to the number `x`.
 
-See also [`BoxCox`](@ref).
+See also [`boxcox`](@ref).
 """
 function (t::BoxCoxTransformation)(x::Number)
     return boxcox(t.λ, x)
@@ -307,6 +308,11 @@ end
 
 StatsAPI.nobs(bc::BoxCoxTransformation) = length(bc.y)
 
+"""
+    StatsAPI.params(bc::BoxCoxTransformation)
+
+Return a vector of all parameters, i.e. `[λ]`.
+"""
 StatsAPI.params(bc::BoxCoxTransformation) = [bc.λ]
 
 # function _pvalue(bc::BoxCoxTransformation)
