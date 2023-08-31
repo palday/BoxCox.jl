@@ -19,11 +19,19 @@ using BoxCox
 using CairoMakie
 using Random
 x = abs2.(randn(MersenneTwister(42), 1000))
-hist(x)
+let f = Figure(; resolution=(400, 400))
+    ax = Axis(f[1,1]; xlabel="x", ylabel="density")
+    density!(ax, x)
+    f
+end
 ```
 
 ```@example Unconditional
-qqnorm(x)
+let f = Figure(; resolution=(400, 400))
+    ax = Axis(f[1,1]; xlabel="theoretical", ylabel="observed")
+    qqnorm!(ax, x)
+    f
+end
 ```
 
 We fit the Box-Cox transform.
@@ -36,13 +44,21 @@ Note that the resulting transform isn't exactly a square root, even though our d
 Now that we've fit the transform, we use it like a function to transform the original data.
 
 ```@example Unconditional
-hist(bc.(x))
+let f = Figure(; resolution=(400, 400))
+    ax = Axis(f[1,1]; xlabel="x", ylabel="density")
+    density!(ax, bc.(x))
+    f
+end
 ```
 
 There is also a special method for `qqnorm` provided for objects of type `BoxCoxTransformation`, which shows the QQ plot of the transformation applied to the original data.
 
 ```@example Unconditional
-qqnorm(bc)
+let f = Figure(; resolution=(400, 400))
+    ax = Axis(f[1,1]; xlabel="theoretical", ylabel="observed")
+    qqnorm!(ax, bc)
+    f
+end
 ```
 
 We can also generate a diagnostic plot to see how well other parameter values would have worked for normalizing the data.
@@ -51,7 +67,7 @@ We can also generate a diagnostic plot to see how well other parameter values wo
 boxcoxplot(bc)
 ```
 
-The vertical line corresponds to the final parameter estimate. 
+The vertical line corresponds to the final parameter estimate.
 
 If we specify a confidence level, then an additional horizontal line is added, which crosses the likelihood profile at the points corresponding to the edge of the confidence interval.
 
@@ -70,7 +86,10 @@ using CairoMakie
 using RDatasets: dataset as rdataset
 using StatsModels
 
+CairoMakie.activate!(; type="svg")
+
 trees = rdataset("datasets", "trees")
+first(trees, 5)
 ```
 
 For the conditional distribution, we want to fit a linear regression to the transformed response values and then evaluate the profile likelihood of the transformation. If the StatsModels package has been loaded, either directly or indirectly (e.g. via loading GLM.jl or MixedModels.jl), then a formula interface is available. (Otherwise, the model matrix and the response have to specified separately.)
@@ -84,9 +103,12 @@ We can do all the same diagnostics as previously:
 ```@example Conditional
 let f = Figure()
     ax = Axis(f[1, 1]; title="Raw")
-    hist!(ax, trees.Volume)
+    density!(ax, trees.Volume)
     ax = Axis(f[1, 2]; title="Transformed")
-    hist!(ax, bc.(trees.Volume))
+    density!(ax, bc.(trees.Volume))
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```
@@ -96,7 +118,10 @@ let f = Figure()
     ax = Axis(f[1, 1]; title="Raw", aspect=1)
     qqnorm!(ax, trees.Volume; qqline=:fitrobust)
     ax = Axis(f[1, 2]; title="Transformed", aspect=1)
-    qqnorm!(ax, bc)
+    qqnorm!(ax, bc.(trees.Volume); qqline=:fitrobust)
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```

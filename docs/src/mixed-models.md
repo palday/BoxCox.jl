@@ -16,6 +16,7 @@ using BoxCox
 using CairoMakie
 using MixedModels
 using MixedModels: dataset
+CairoMakie.activate!(; type="svg")
 ```
 
 Then we fit the traditional model used reaction time as our dependent variable:
@@ -26,6 +27,9 @@ model = fit(MixedModel,
             dataset(:sleepstudy))
 ```
 
+
+## Fitting the Box-Cox transformation
+
 While this model does perform well overall, we can also examine whether the Box-Cox transformation suggests a transformation of the response.
 
 ```@example Mixed
@@ -34,6 +38,9 @@ bc = fit(BoxCoxTransformation, model)
 
 !!! note
     For large models, fitting the `BoxCoxTransformation` can take a while because a mixed model must be repeatedly fit after each intermediate transformation.
+
+
+## Choosing an appropriate transformation
 
 Although we receive a single "best" value (approximately -1.0747)  the fitting process, it is worthwhile to look at the profile likelihood plot for the transformation:
 
@@ -59,6 +66,9 @@ In other words, there is a normalizing denominator that flips the sign when ``\l
 If we use the full Box-Cox formula, then the sign of the effect in our transformed and untransformed model remains the same.
 While useful at times, speed has a natural interpretation and so we instead use the power relation, which is the actual key component, without normalization.
 
+
+## Fitting a model to the transormed response
+
 ```@example Mixed
 model_bc = fit(MixedModel,
                @formula(1 / reaction ~ 1 + days + (1 + days | subj)),
@@ -67,15 +77,22 @@ model_bc = fit(MixedModel,
 
 Finally, let's take a look at our the residual diagnostics for our transformed and untransformed models:
 
+## Impact of transformation
+
 ```@example Mixed
 let f = Figure()
     ax = Axis(f[1, 1]; title="Speed", aspect=1)
     density!(ax, residuals(model))
     ax = Axis(f[1, 2]; title="Reaction Time", aspect=1)
     density!(ax, residuals(model_bc))
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```
+
+### QQ plots
 
 ```@example Mixed
 let f = Figure()
@@ -83,9 +100,14 @@ let f = Figure()
     qqnorm!(ax, residuals(model); qqline=:fitrobust)
     ax = Axis(f[1, 2]; title="Speed", aspect=1)
     qqnorm!(ax, residuals(model_bc); qqline=:fitrobust)
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```
+
+### Fitted vs residual
 
 ```@example Mixed
 let f = Figure()
@@ -95,9 +117,14 @@ let f = Figure()
     ax = Axis(f[1, 2]; title="Speed", aspect=1, xlabel="Fitted", ylabel="Residual")
     scatter!(ax, fitted(model_bc), residuals(model_bc))
     hlines!(ax, 0; linestyle=:dash, color=:black)
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```
+
+### Fitted vs observed
 
 ```@example Mixed
 let f = Figure()
@@ -107,6 +134,9 @@ let f = Figure()
     ax = Axis(f[1, 2]; title="Speed", aspect=1, xlabel="Fitted", ylabel="Observed")
     scatter!(ax, fitted(model_bc), response(model_bc))
     ablines!(ax, 0, 1; linestyle=:dash, color=:black)
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```
