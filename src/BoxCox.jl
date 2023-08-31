@@ -95,6 +95,17 @@ end
 
 Compute the Box-Cox transformation of x for the parameter value λ.
 
+The Box-Cox transformation is defined as:
+
+```math
+\\begin{cases}
+\\frac{x^{\\lambda} - 1}{\\lambda} &\\quad \\lambda \\neq 0 \\\\
+\\log x &\\quad \\lambda = 0
+\\end{cases}
+```
+
+for positive ``x``. (If ``x <= 0``, then ``x`` must first be translated to be strictly positive.)
+
 `atol` controls the absolute tolerance for treating λ as zero.
 
 The one argument variant curries and creates a one-argument function of `x` for the given λ.
