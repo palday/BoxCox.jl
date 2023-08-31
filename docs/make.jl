@@ -8,6 +8,6 @@ makedocs(; root=joinpath(dirname(pathof(BoxCox)), "..", "docs"),
          strict=true,
          pages=["index.md",
                 "mixed-models.md",
-                "api.md",])
+                "api.md"])
 
 deploydocs(; repo="github.com/palday/BoxCox.jl", push_preview=true, devbranch="main")
