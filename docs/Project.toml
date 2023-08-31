@@ -1,4 +1,5 @@
 [deps]
+BoxCox = "1248164d-f7a6-4bdb-8e8d-8c4a187b3ce6"
 CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
