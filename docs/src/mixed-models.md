@@ -42,13 +42,13 @@ bc = fit(BoxCoxTransformation, model)
 
 ## Choosing an appropriate transformation
 
-Although we receive a single "best" value (approximately -1.0747)  the fitting process, it is worthwhile to look at the profile likelihood plot for the transformation:
+Although we receive a single "best" value (approximately -1.0747) from the fitting process, it is worthwhile to look at the profile likelihood plot for the transformation:
 
 ```@example Mixed
 boxcoxplot(bc; conf_level=0.95)
 ```
 
-Here we see that -1 is nearly as good. Moreover, ``\text{time}^-1`` has a natural interpretation as *speed*.
+Here we see that -1 is nearly as good. Moreover, time``^{-1}`` has a natural interpretation as *speed*.
 In other words, we can model reaction speed instead of reaction time.
 Then instead of seeing whether participants take longer to respond with each passing day, we can see whether their speed increases or decreases.
 In both cases, we're looking at whether they respond *faster* or *slower* and even the terminology *fast* and *slow* suggests that speed is easily interpretable.
@@ -69,11 +69,20 @@ While useful at times, speed has a natural interpretation and so we instead use 
 
 ## Fitting a model to the transormed response
 
+Because `reaction` is stored in milliseconds, we use `1000 / reaction` instead of `1 / reaction` so that our speed units are responses per second.
+
 ```@example Mixed
 model_bc = fit(MixedModel,
-               @formula(1 / reaction ~ 1 + days + (1 + days | subj)),
+               @formula(1000 / reaction ~ 1 + days + (1 + days | subj)),
                 dataset(:sleepstudy))
 ```
+
+For our original model on the untransformed scale, the intercept was approximately 250, which means that the average response time was about 250 milliseconds. 
+For the model on the speed scale, we have an intercept about approximately 4, which means that the average response speed is about 4 responses per second, which implies that the the average response time is 250 milliseconds.
+In other words, our new results are compatible with our previous estimates.
+
+!!! note
+    Because the Box-Cox transformation helps a model achieve normality of the *residuals*, it helps fulfill the model assumptions. When these assumptions are not fulfilled, we may still get similar estimates, but the standard errors and derived measures (e.g., confidence intervals and associated coverage) may not be correct.
 
 Finally, let's take a look at our the residual diagnostics for our transformed and untransformed models:
 

@@ -18,18 +18,17 @@ We start with the square root of a normal distribution.
 using BoxCox
 using CairoMakie
 using Random
+CairoMakie.activate!(; type="svg")
+
 x = abs2.(randn(MersenneTwister(42), 1000))
-let f = Figure(; resolution=(400, 400))
+let f = Figure()
     ax = Axis(f[1,1]; xlabel="x", ylabel="density")
     density!(ax, x)
-    f
-end
-```
-
-```@example Unconditional
-let f = Figure(; resolution=(400, 400))
-    ax = Axis(f[1,1]; xlabel="theoretical", ylabel="observed")
+    ax = Axis(f[1,2]; xlabel="theoretical quantiles", ylabel="observed values")
     qqnorm!(ax, x)
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```
@@ -44,19 +43,14 @@ Note that the resulting transform isn't exactly a square root, even though our d
 Now that we've fit the transform, we use it like a function to transform the original data.
 
 ```@example Unconditional
-let f = Figure(; resolution=(400, 400))
+let f = Figure(), bcx = bc.(x)
     ax = Axis(f[1,1]; xlabel="x", ylabel="density")
-    density!(ax, bc.(x))
-    f
-end
-```
-
-There is also a special method for `qqnorm` provided for objects of type `BoxCoxTransformation`, which shows the QQ plot of the transformation applied to the original data.
-
-```@example Unconditional
-let f = Figure(; resolution=(400, 400))
-    ax = Axis(f[1,1]; xlabel="theoretical", ylabel="observed")
-    qqnorm!(ax, bc)
+    density!(ax, bcx)
+    ax = Axis(f[1,2]; xlabel="theoretical quantiles", ylabel="observed values")
+    qqnorm!(ax, bcx; qqline=:fitrobust)
+    colsize!(f.layout, 1, Aspect(1, 1.0))
+    colsize!(f.layout, 2, Aspect(1, 1.0))
+    resize_to_layout!(f)
     f
 end
 ```
