@@ -90,9 +90,9 @@ Finally, let's take a look at our the residual diagnostics for our transformed a
 
 ```@example Mixed
 let f = Figure()
-    ax = Axis(f[1, 1]; title="Speed", aspect=1)
+    ax = Axis(f[1, 1]; title="Reaction Time", aspect=1)
     density!(ax, residuals(model))
-    ax = Axis(f[1, 2]; title="Reaction Time", aspect=1)
+    ax = Axis(f[1, 2]; title="Speed", aspect=1)
     density!(ax, residuals(model_bc))
     colsize!(f.layout, 1, Aspect(1, 1.0))
     colsize!(f.layout, 2, Aspect(1, 1.0))
