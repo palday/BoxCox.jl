@@ -1,7 +1,7 @@
 name = "BoxCox"
 uuid = "1248164d-f7a6-4bdb-8e8d-8c4a187b3ce6"
 authors = ["Phillip Alday <me@phillipalday.com>"]
-version = "0.2.2"
+version = "0.2.3"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
@@ -39,6 +39,7 @@ MixedModels = "4"
 NLopt = "0.6, 1"
 PrecompileTools = "1"
 RDatasets = "0.7"
+Statistics = "1"
 StatsAPI = "1.6"
 StatsBase = "0.33, 0.34"
 StatsFuns = "1"
