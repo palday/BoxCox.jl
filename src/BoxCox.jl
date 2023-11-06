@@ -144,7 +144,7 @@ end
 
 Create a diagnostic plot for the Box-Cox transformation.
 
-If λ is `nothing`, the range of possible values for the λ paramter is automatically determined,
+If λ is `nothing`, the range of possible values for the λ parameter is automatically determined,
 with a total of `n_steps`. If `λ` is a vector of numbers, then the λ parameter is evaluated at
 each element of that vector.
 
@@ -239,7 +239,7 @@ If a `LinearMixedModel` is provided, then `X` and `y` are extracted from the mod
 
 The `opt_` keyword arguments are tolerances passed onto NLopt.
 
-`maxiter` specifies the maximum number of iterations to use in optimization; negative values place no restriciton.
+`maxiter` specifies the maximum number of iterations to use in optimization; negative values place no restrictions.
 
 `algorithm` is a valid NLopt algorithm to use in optimization.
 
