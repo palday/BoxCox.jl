@@ -67,7 +67,7 @@ If we use the full Box-Cox formula, then the sign of the effect in our transform
 While useful at times, speed has a natural interpretation and so we instead use the power relation, which is the actual key component, without normalization.
 
 
-## Fitting a model to the transormed response
+## Fitting a model to the transformed response
 
 Because `reaction` is stored in milliseconds, we use `1000 / reaction` instead of `1 / reaction` so that our speed units are responses per second.
 
