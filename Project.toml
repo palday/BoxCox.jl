@@ -1,7 +1,7 @@
 name = "BoxCox"
 uuid = "1248164d-f7a6-4bdb-8e8d-8c4a187b3ce6"
 authors = ["Phillip Alday <me@phillipalday.com>"]
-version = "0.2.3"
+version = "0.2.4"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
@@ -35,7 +35,7 @@ Aqua = "0.6"
 Compat = "3.29, 4"
 DocStringExtensions = "0.9"
 LinearAlgebra = "1"
-Makie = "0.19.0"
+Makie = "0.19.0, 0.20"
 MixedModels = "4"
 NLopt = "0.6, 1"
 PrecompileTools = "1"
