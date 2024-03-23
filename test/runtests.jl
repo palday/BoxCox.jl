@@ -87,6 +87,11 @@ end
     @test qq isa Makie.FigureAxisPlot
     save(path("qq.png"), qq)
 
+    qqfig = Figure(; title="QQNorm Mutating")
+    qqnorm!(Axis(qqfig[1, 1]; xlabel="Theoretical Quantiles", ylabel="Observed Quantiles"))
+    @test qqfig isa Makie.Figure
+    save(path("qqfig.png"), qqfig)
+
     bcp = boxcoxplot(vol)
     save(path("boxcox.png"), bcp)
     @test bcp isa Makie.Figure
