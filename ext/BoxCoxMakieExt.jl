@@ -50,7 +50,7 @@ function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
                             ylabel="log likelihood",
                             n_steps=21,
                             λ=nothing,
-                            conf_level=0.95,
+                            conf_level=nothing,
                             attributes...)
     ax.xlabel = xlabel
     ax.ylabel = ylabel
@@ -78,6 +78,7 @@ function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
     ll = _loglikelihood_boxcox(X, y, λ)
 
     scatterlines!(ax, λ, ll; attributes...)
+    vlines!(ax, bc.λ; linestyle=:dash, color=:black)
 
     return plot
 end

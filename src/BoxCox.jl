@@ -141,7 +141,7 @@ end
     boxcoxplot(bc::BoxCoxTransformation; kwargs...)
     boxcoxplot!(axis::Axis, bc::BoxCoxTransformation;
                 λ=nothing, n_steps=21, xlabel="λ", ylabel="log likelihood",
-                conf_level=0.95, attributes...)
+                conf_level=nothing, attributes...)
 
 Create a diagnostic plot for the Box-Cox transformation.
 
