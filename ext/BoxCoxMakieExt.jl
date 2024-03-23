@@ -47,7 +47,7 @@ end
 
 function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
                             xlabel="λ",
-                            ylabel = "log likelihood",
+                            ylabel="log likelihood",
                             n_steps=21,
                             λ=nothing,
                             conf_level=0.95,
@@ -80,7 +80,6 @@ function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
     scatterlines!(ax, λ, ll; attributes...)
 
     return plot
-
 end
 
 @setup_workload begin
