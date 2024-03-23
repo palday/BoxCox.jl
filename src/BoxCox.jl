@@ -1,6 +1,5 @@
 module BoxCox
 
-using Compat
 using DocStringExtensions
 using LinearAlgebra
 # we use NLopt because that's what MixedModels uses and this was developed
@@ -140,25 +139,29 @@ end
 
 """
     boxcoxplot(bc::BoxCoxTransformation; kwargs...)
-    boxcoxplot!(axis, bc::BoxCoxTransformation; λ=nothing, n_steps=21)
+    boxcoxplot!(axis::Axis, bc::BoxCoxTransformation;
+                λ=nothing, n_steps=21, xlabel="λ", ylabel="log likelihood",
+                conf_level=nothing, attributes...)
 
 Create a diagnostic plot for the Box-Cox transformation.
+
+The mutating method for `Axis` returns the (modified) original `Axis`.
+The non-mutating method returns a `Figure`.
 
 If λ is `nothing`, the range of possible values for the λ parameter is automatically determined,
 with a total of `n_steps`. If `λ` is a vector of numbers, then the λ parameter is evaluated at
 each element of that vector.
 
-!!! note
-    You must load an appropriate Makie backend (e.g., CairoMakie or GLMakie) to actually render a plot.
+If `conf_level` is `nothing`, then no confidence interval is displayed.
+
+`attributes` are forwarded to `scatterlines!`.
 
 !!! note
     A meaningful plot is only possible when `bc` has not been `empty!`'ed.
 
-!!! compat "Julia 1.6"
-    The plotting functionality is defined unconditionally.
-
-!!! compat "Julia 1.9"
+!!! note
     The plotting functionality interface is defined as a package extension and only loaded when Makie is available.
+    You must load an appropriate Makie backend (e.g., CairoMakie or GLMakie) to actually render a plot.
 """
 function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
     # specialize slightly so that they can't just throw Any and get this message
@@ -227,11 +230,7 @@ If a `LinearMixedModel` is provided, then `X` and `y` are extracted from the mod
     The formula interface is only available if StatsModels.jl is loaded either directly or via another package
     such GLM.jl or MixedModels.jl.
 
-!!! compat "Julia 1.6"
-    - The formula interface is defined unconditionally, but `@formula` is not loaded.
-    - The MixedModels interface is defined unconditionally.
-
-!!! compat "Julia 1.9"
+!!! note
     - The formula interface is defined as a package extension.
     - The MixedModels interface is defined as a package extension.
 
@@ -425,12 +424,6 @@ function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
 
     return nothing
-end
-
-if !isdefined(Base, :get_extension)
-    include("../ext/BoxCoxMakieExt.jl")
-    include("../ext/BoxCoxMixedModelsExt.jl")
-    include("../ext/BoxCoxStatsModelsExt.jl")
 end
 
 @setup_workload begin

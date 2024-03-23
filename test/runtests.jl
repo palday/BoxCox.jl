@@ -11,9 +11,7 @@ struct FakeTransformation <: BoxCox.PowerTransformation end
 path(x) = joinpath(@__DIR__, "out", x)
 
 @testset "Aqua" begin
-    @static if VERSION >= v"1.9"
-        Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
-    end
+    Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
 end
 
 trees = rdataset("datasets", "trees")
@@ -86,13 +84,18 @@ end
 @testset "plotting" begin
     vol = fit(BoxCoxTransformation, trees.Volume)
     qq = qqnorm(vol)
+    @test qq isa Makie.FigureAxisPlot
     save(path("qq.png"), qq)
 
-    p = plot(vol)
-    save(path("plot.png"), p)
+    qqfig = Figure(; title="QQNorm Mutating")
+    qqnorm!(Axis(qqfig[1, 1]; xlabel="Theoretical Quantiles", ylabel="Observed Quantiles"),
+            vol)
+    @test qqfig isa Makie.Figure
+    save(path("qqfig.png"), qqfig)
 
     bcp = boxcoxplot(vol)
     save(path("boxcox.png"), bcp)
+    @test bcp isa Makie.Figure
 
     volform = fit(BoxCoxTransformation,
                   @formula(Volume ~ 1 + log(Height) + log(Girth)),
@@ -167,7 +170,7 @@ end
 
     @testset "mixed models + makie integration" begin
         bcpmm = boxcoxplot(bc; conf_level=0.95, title="sleep study should use speed")
-        @test bcpmm isa Makie.FigureAxisPlot
+        @test bcpmm isa Makie.Figure
         save(path("boxcox_mixedmodel.png"), bcpmm)
     end
 end

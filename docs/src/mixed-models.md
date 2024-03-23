@@ -5,8 +5,7 @@ CurrentModule = BoxCox
 ```
 
 BoxCox.jl supports finding fitting the Box-Cox transformation to a `LinearMixedModel` from MixedModels.jl.
-On Julia 1.9 and above, this support is done via a package extension and so the user pays no dependency or precompilation penalty when this functionality is not used.
-On Julia 1.6 to 1.8, this functionality is defined unconditionally (thus incurring the dependency and precompilation penalty), but neither the `@formula` macro nor the `MixedModel` type are re-exported, so MixedModels.jl must still be loaded to use this functionality.
+This support is done via a package extension and so the user pays no dependency or precompilation penalty when this functionality is not used.
 
 
 Let us examine the classic sleepstudy dataset from MixedModels.jl. First, we load the necessary packages.
@@ -77,7 +76,7 @@ model_bc = fit(MixedModel,
                 dataset(:sleepstudy))
 ```
 
-For our original model on the untransformed scale, the intercept was approximately 250, which means that the average response time was about 250 milliseconds. 
+For our original model on the untransformed scale, the intercept was approximately 250, which means that the average response time was about 250 milliseconds.
 For the model on the speed scale, we have an intercept about approximately 4, which means that the average response speed is about 4 responses per second, which implies that the the average response time is 250 milliseconds.
 In other words, our new results are compatible with our previous estimates.
 

@@ -5,32 +5,17 @@ using Makie
 
 using BoxCox: _loglikelihood_boxcox!,
               _loglikelihood_boxcox,
-              qr, chisqinvcdf, @compat,
+              qr, chisqinvcdf,
               @setup_workload, @compile_workload
 
 # XXX it would be great to have a 1-1 aspect ratio here,
 # but this seems like something that should be done upstream
-function Makie.convert_arguments(P::Type{<:Makie.QQNorm}, x::BoxCoxTransformation, args...;
-                                 qqline=:fitrobust, kwargs...)
-    return convert_arguments(P, x.(x.y), args...; qqline, kwargs...)
+function Makie.qqnorm!(ax::Axis, bc::BoxCoxTransformation, args...; kwargs...)
+    return qqnorm!(ax, bc.(bc.y), args...; kwargs...)
 end
 
-function Makie.convert_arguments(P::Type{<:Union{Makie.Scatter,Makie.Lines}},
-                                 bc::BoxCoxTransformation, args...;
-                                 λ=nothing, n_steps=21, kwargs...)
-    if isnothing(λ)
-        # TODO: cache this somehow so we're not computing it twice
-        # when also plotting the CI
-        ci = confint(bc; fast=true)
-        lower = first(ci) - 0.05 * abs(first(ci))
-        upper = last(ci) + 0.05 * abs(last(ci))
-        λ = range(lower, upper; length=n_steps)
-    end
-    sort!(collect(λ))
-
-    @compat (; X, y) = bc
-    ll = _loglikelihood_boxcox(X, y, λ)
-    return convert_arguments(P, λ, ll, args...; kwargs...)
+function Makie.qqnorm(bc::BoxCoxTransformation, args...; kwargs...)
+    return qqnorm(bc.(bc.y), args...; kwargs...)
 end
 
 function BoxCox._loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
@@ -54,96 +39,49 @@ function BoxCox._loglikelihood_boxcox(::Nothing, y::Vector{<:Number},
     return ll
 end
 
-function Makie.convert_arguments(P::Type{<:Makie.VLines}, bc::BoxCoxTransformation, args...;
-                                 kwargs...)
-    return convert_arguments(P, bc.λ, args...; kwargs...)
+function BoxCox.boxcoxplot(bc::BoxCoxTransformation; kwargs...)
+    fig = Figure()
+    boxcoxplot!(Axis(fig[1, 1]), bc; kwargs...)
+    return fig
 end
 
-@recipe(BCPlot, boxcox) do scene
-    s_theme = default_theme(scene, Scatter)
-    l_theme = default_theme(scene, Lines)
-    automatic = Makie.automatic
-    scatline = Attributes(; color=l_theme.color,
-                          colormap=l_theme.colormap,
-                          # colorscale = l_theme.colorscale,
-                          colorrange=get(l_theme.attributes, :colorrange, automatic),
-                          linestyle=l_theme.linestyle,
-                          linewidth=l_theme.linewidth,
-                          markercolor=automatic,
-                          markercolormap=theme(scene, :colormap),
-                          markercolorrange=get(s_theme.attributes, :colorrange, automatic),
-                          markersize=s_theme.markersize,
-                          strokecolor=s_theme.strokecolor,
-                          strokewidth=s_theme.strokewidth,
-                          marker=s_theme.marker,
-                          inspectable=theme(scene, :inspectable),
-                          cycle=[:color])
-    return merge(scatline, Attributes(; conf_level=0.95, n_steps=10, λ=nothing))
-end
+function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
+                            xlabel="λ",
+                            ylabel="log likelihood",
+                            n_steps=21,
+                            λ=nothing,
+                            conf_level=nothing,
+                            attributes...)
+    ax.xlabel = xlabel
+    ax.ylabel = ylabel
 
-function Makie.plot!(p::BCPlot)
-    # markercolor is the same as linecolor if left automatic
-    # RGBColors -> union of all colortypes that `to_color` accepts + returns
-    real_markercolor = Observable{Makie.RGBColors}()
-    map!(real_markercolor, p.color, p.markercolor) do col, mcol
-        if mcol === Makie.automatic
-            return to_color(col)
-        else
-            return to_color(mcol)
-        end
-    end
+    ci = nothing
 
-    bc = p[1][]
-    n_steps = p.n_steps[]
-    λ = p.λ[]
-    # TODO use splines
-    scatterlines!(p, bc; λ, n_steps,
-                  p.strokecolor, p.strokewidth, p.marker, p.markersize,
-                  color=real_markercolor, p.linestyle, p.linewidth, p.colormap, # p.colorscale,
-                  p.colorrange, p.inspectable)
-    # seem to be hitting some buggy behavior in Makie
-    # vlines!(p, bc; λ,
-    #         p.color, linestyle=:dash, p.linewidth, p.colormap, # p.colorscale,
-    #         p.colorrange, p.inspectable)
-    return plot
-end
-
-BoxCox.boxcoxplot!(ax, bc::BoxCoxTransformation; kwargs...) = bcplot!(ax, bc; kwargs...)
-BoxCox.boxcoxplot(bc::BoxCoxTransformation; kwargs...) = bcplot(bc; kwargs...)
-
-function Makie.plot!(ax::Axis, P::Type{<:BCPlot}, allattrs::Makie.Attributes, bc)
-    allattrs = merge(default_theme(P), allattrs)
-    plot = Makie.plot!(ax.scene, P, allattrs, bc)
-
-    if haskey(allattrs, :title)
-        ax.title = allattrs.title[]
-    end
-    if haskey(allattrs, :xlabel)
-        ax.xlabel = allattrs.xlabel[]
-    else
-        ax.xlabel = "λ"
-    end
-    if haskey(allattrs, :ylabel)
-        ax.ylabel = allattrs.ylabel[]
-    else
-        ax.ylabel = "log likelihood"
-    end
-    # scatterlines!(ax, bc)
-    # the ylim error doesn't happen if we do this here
-    vlines!(ax, bc; bc.λ, linestyle=:dash, color=:black)
-    if haskey(allattrs, :conf_level)
-        level = allattrs.conf_level[]
-        lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
+    if !isnothing(conf_level)
+        lltarget = loglikelihood(bc) - chisqinvcdf(1, conf_level) / 2
         hlines!(ax, lltarget; linestyle=:dash, color=:black)
-        ci = confint(bc; level)
+        ci = confint(bc; level=conf_level)
         vlines!(ax, ci; linestyle=:dash, color=:black)
-        text = "$(round(Int, 100 * level))% CI"
+        text = "$(round(Int, 100 * conf_level))% CI"
         text!(ax, first(ci) + 0.05 * abs(first(ci)), lltarget; text)
     end
+
+    if isnothing(λ)
+        ci = @something(ci, confint(bc; fast=true))
+        lower = first(ci) - 0.05 * abs(first(ci))
+        upper = last(ci) + 0.05 * abs(last(ci))
+        λ = range(lower, upper; length=n_steps)
+    end
+    sort!(collect(λ))
+
+    (; X, y) = bc
+    ll = _loglikelihood_boxcox(X, y, λ)
+
+    scatterlines!(ax, λ, ll; attributes...)
+    vlines!(ax, bc.λ; linestyle=:dash, color=:black)
+
     return plot
 end
-
-Makie.plottype(::BoxCoxTransformation) = BCPlot
 
 @setup_workload begin
     # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
