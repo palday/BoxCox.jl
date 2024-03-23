@@ -48,7 +48,7 @@ end
 function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
                             xlabel="λ",
                             ylabel = "log likelihood",
-                            n_steps=10,
+                            n_steps=21,
                             λ=nothing,
                             conf_level=0.95,
                             attributes...)

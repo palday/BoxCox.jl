@@ -5,7 +5,6 @@ using BoxCox
 makedocs(; root=joinpath(dirname(pathof(BoxCox)), "..", "docs"),
          sitename="BoxCox",
          doctest=true,
-         strict=true,
          pages=["index.md",
                 "mixed-models.md",
                 "api.md"])
