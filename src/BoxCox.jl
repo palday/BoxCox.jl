@@ -427,12 +427,6 @@ function Base.show(io::IO, t::BoxCoxTransformation)
     return nothing
 end
 
-if !isdefined(Base, :get_extension)
-    include("../ext/BoxCoxMakieExt.jl")
-    include("../ext/BoxCoxMixedModelsExt.jl")
-    include("../ext/BoxCoxStatsModelsExt.jl")
-end
-
 @setup_workload begin
     # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
     # precompile file and potentially make loading faster.
