@@ -25,14 +25,14 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: ${{ matrix.julia-version }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Instantiate `format` environment and format
+        shell: julia --color=yes -O0 {0}
         run: |
-          julia -e'
           using Pkg; Pkg.activate()
           Pkg.add("JuliaFormatter")
           using JuliaFormatter
-          format(".", YASStyle())'
+          format(".", YASStyle())
       - uses: reviewdog/action-suggester@v1
         if: github.event_name == 'pull_request'
         with:
