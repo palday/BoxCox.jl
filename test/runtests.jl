@@ -88,7 +88,8 @@ end
     save(path("qq.png"), qq)
 
     qqfig = Figure(; title="QQNorm Mutating")
-    qqnorm!(Axis(qqfig[1, 1]; xlabel="Theoretical Quantiles", ylabel="Observed Quantiles"))
+    qqnorm!(Axis(qqfig[1, 1]; xlabel="Theoretical Quantiles", ylabel="Observed Quantiles"),
+            vol)
     @test qqfig isa Makie.Figure
     save(path("qqfig.png"), qqfig)
 
