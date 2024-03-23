@@ -1,6 +1,5 @@
 module BoxCox
 
-using Compat
 using DocStringExtensions
 using LinearAlgebra
 # we use NLopt because that's what MixedModels uses and this was developed
@@ -154,10 +153,7 @@ each element of that vector.
 !!! note
     A meaningful plot is only possible when `bc` has not been `empty!`'ed.
 
-!!! compat "Julia 1.6"
-    The plotting functionality is defined unconditionally.
-
-!!! compat "Julia 1.9"
+!!! note
     The plotting functionality interface is defined as a package extension and only loaded when Makie is available.
 """
 function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
@@ -227,11 +223,7 @@ If a `LinearMixedModel` is provided, then `X` and `y` are extracted from the mod
     The formula interface is only available if StatsModels.jl is loaded either directly or via another package
     such GLM.jl or MixedModels.jl.
 
-!!! compat "Julia 1.6"
-    - The formula interface is defined unconditionally, but `@formula` is not loaded.
-    - The MixedModels interface is defined unconditionally.
-
-!!! compat "Julia 1.9"
+!!! note
     - The formula interface is defined as a package extension.
     - The MixedModels interface is defined as a package extension.
 

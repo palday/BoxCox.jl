@@ -5,7 +5,7 @@ using Makie
 
 using BoxCox: _loglikelihood_boxcox!,
               _loglikelihood_boxcox,
-              qr, chisqinvcdf, @compat,
+              qr, chisqinvcdf,
               @setup_workload, @compile_workload
 
 # XXX it would be great to have a 1-1 aspect ratio here,
@@ -41,18 +41,19 @@ end
 
 function BoxCox.boxcoxplot(bc::BoxCoxTransformation; kwargs...)
     fig = Figure()
-    boxcoxplot!(Axis(fig[1, 1]), kwargs...)
+    boxcoxplot!(Axis(fig[1, 1]), bc, kwargs...)
+    return fig
 end
 
-function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation; 
-                            xlabel="λ", 
+function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
+                            xlabel="λ",
                             ylabel = "log likelihood",
                             n_steps=10,
                             λ=nothing,
                             conf_level=0.95,
                             attributes...)
-    ax.xlabel = "λ"
-    ax.ylabel = "log likelihood"
+    ax.xlabel = xlabel
+    ax.ylabel = ylabel
 
     ci = nothing
 
@@ -61,7 +62,7 @@ function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
         hlines!(ax, lltarget; linestyle=:dash, color=:black)
         ci = confint(bc; level=conf_level)
         vlines!(ax, ci; linestyle=:dash, color=:black)
-        text = "$(round(Int, 100 * level))% CI"
+        text = "$(round(Int, 100 * conf_level))% CI"
         text!(ax, first(ci) + 0.05 * abs(first(ci)), lltarget; text)
     end
 
@@ -73,11 +74,10 @@ function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
     end
     sort!(collect(λ))
 
-    @compat (; X, y) = bc
+    (; X, y) = bc
     ll = _loglikelihood_boxcox(X, y, λ)
 
-    scatterlines!(ax, ll, λ; attributes...)
-    vlines!(ax, bc; bc.λ, linestyle=:dash, color=:black)
+    scatterlines!(ax, λ, ll; attributes...)
 
     return plot
 

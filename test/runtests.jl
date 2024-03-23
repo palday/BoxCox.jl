@@ -11,9 +11,7 @@ struct FakeTransformation <: BoxCox.PowerTransformation end
 path(x) = joinpath(@__DIR__, "out", x)
 
 @testset "Aqua" begin
-    @static if VERSION >= v"1.9"
-        Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
-    end
+    Aqua.test_all(BoxCox; ambiguities=false, piracy=true)
 end
 
 trees = rdataset("datasets", "trees")
