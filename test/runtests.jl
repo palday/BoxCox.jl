@@ -84,13 +84,12 @@ end
 @testset "plotting" begin
     vol = fit(BoxCoxTransformation, trees.Volume)
     qq = qqnorm(vol)
+    @test qq isa Makie.FigureAxisPlot
     save(path("qq.png"), qq)
-
-    p = plot(vol)
-    save(path("plot.png"), p)
 
     bcp = boxcoxplot(vol)
     save(path("boxcox.png"), bcp)
+    @test bcp isa Makie.Figure
 
     volform = fit(BoxCoxTransformation,
                   @formula(Volume ~ 1 + log(Height) + log(Girth)),
@@ -165,7 +164,7 @@ end
 
     @testset "mixed models + makie integration" begin
         bcpmm = boxcoxplot(bc; conf_level=0.95, title="sleep study should use speed")
-        @test bcpmm isa Makie.FigureAxisPlot
+        @test bcpmm isa Makie.Figure
         save(path("boxcox_mixedmodel.png"), bcpmm)
     end
 end

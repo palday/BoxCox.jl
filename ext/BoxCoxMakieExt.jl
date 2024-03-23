@@ -41,7 +41,7 @@ end
 
 function BoxCox.boxcoxplot(bc::BoxCoxTransformation; kwargs...)
     fig = Figure()
-    boxcoxplot!(Axis(fig[1, 1]), bc, kwargs...)
+    boxcoxplot!(Axis(fig[1, 1]), bc; kwargs...)
     return fig
 end
 
