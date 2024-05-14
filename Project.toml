@@ -1,7 +1,7 @@
 name = "BoxCox"
 uuid = "1248164d-f7a6-4bdb-8e8d-8c4a187b3ce6"
 authors = ["Phillip Alday <me@phillipalday.com>"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
@@ -33,7 +33,7 @@ BoxCoxStatsModelsExt = ["StatsModels", "Tables"]
 Aqua = "0.6"
 DocStringExtensions = "0.9"
 LinearAlgebra = "1"
-Makie = "0.19, 0.20"
+Makie = "0.19, 0.20, 0.21"
 MixedModels = "4"
 NLopt = "0.6, 1"
 PrecompileTools = "1"
