@@ -101,9 +101,8 @@ end
                   @formula(Volume ~ 1 + log(Height) + log(Girth)),
                   trees)
     bcpf = Figure()
-    ax = Axis(bcpf[1, 1])
+    ax = Axis(bcpf[1, 1]; title="profile log likelihood")
     boxcoxplot!(ax, volform; conf_level=0.95,
-                title="profile log likelihood",
                 xlabel="parameter",
                 ylabel="LL")
     save(path("boxcox_formula.png"), bcpf)
@@ -169,7 +168,7 @@ end
     @test all(isapprox.(ci, ref_ci; atol=1e-2))
 
     @testset "mixed models + makie integration" begin
-        bcpmm = boxcoxplot(bc; conf_level=0.95, title="sleep study should use speed")
+        bcpmm = boxcoxplot(bc; conf_level=0.95)
         @test bcpmm isa Makie.Figure
         save(path("boxcox_mixedmodel.png"), bcpmm)
     end
