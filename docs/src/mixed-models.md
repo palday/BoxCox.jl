@@ -136,8 +136,9 @@ end
 
 ```@example Mixed
 let f = Figure()
-    ax = Axis(f[1, 1]; title="Reaction Time", aspect=1)
-    scatter!(ax, fitted(model), response(model), xlabel="Fitted", ylabel="Observed")
+    ax = Axis(f[1, 1]; title="Reaction Time", aspect=1,  
+              xlabel="Fitted", ylabel="Observed")
+    scatter!(ax, fitted(model), response(model))
     ablines!(ax, 0, 1; linestyle=:dash, color=:black)
     ax = Axis(f[1, 2]; title="Speed", aspect=1, xlabel="Fitted", ylabel="Observed")
     scatter!(ax, fitted(model_bc), response(model_bc))
