@@ -155,7 +155,7 @@ function StatsAPI.fit(T::Type{<:PowerTransformation}, y::AbstractVector{<:Number
     opt.max_objective = obj
     (ll, λ, retval) = optimize(opt, [0.0])
 
-    return BoxCoxTransformation(; λ=only(λ), y, X=nothing, atol)
+    return T(; λ=only(λ), y, X=nothing, atol)
 end
 
 function StatsAPI.fit(T::Type{<:PowerTransformation}, X::AbstractMatrix{<:Number},

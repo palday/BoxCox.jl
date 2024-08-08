@@ -64,7 +64,7 @@ Yeo, I.-K., & Johnson, R. A. (2000). A new family of power transformations to im
 """
 yeojohnson(λ; kwargs...) = x -> yeojohnson(λ, x; kwargs...)
 function yeojohnson(λ, x; atol=0)
-    if y >= 0
+    if x >= 0
         if !isapprox(λ, 0; atol)
             ((x + 1)^λ - 1) / λ
         else
@@ -107,7 +107,50 @@ end
 
 
 # StatsAPI.confint -- can re refactor boxcox slightly so that we can share an implementaiton?
-# Base.show
+
+
+function Base.show(io::IO, t::YeoJohnsonTransformation)
+    println(io, "Yeo-Johnson transformation")
+    @printf io "\nestimated λ: %.4f" t.λ
+    # println(io, "\np-value: ", StatsBase.PValue(_pvalue(t)))
+    println(io, "\nresultant transformation:\n")
+
+    if isapprox(t.λ, 1; t.atol)
+        println(io, "y (the identity)")
+        return nothing
+    end
+
+    λ = @sprintf "%.1f" t.λ
+
+    println(io, "For y ≥ 0,\n")
+    if isapprox(0, t.λ; t.atol)
+        println(io, "log(y + 1)")
+    else
+        numerator = "(y + 1)^$(λ) - 1"
+        denominator = λ
+        width = maximum(length, [numerator, denominator]) + 2
+        println(io, lpad(numerator, (width - length(numerator)) ÷ 2 + length(numerator)))
+        println(io, "-"^width)
+        println(io, lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
+    end
+    println(io)
+    println(io)
+
+    println(io, "For y < 0:\n")
+    if isapprox(2, t.λ; t.atol)
+        println(io, "-log(-y + 1) for y < 0")
+    else
+        twoλ = "(2 - $(λ))"
+        numerator = "-((-y + 1)^$(twoλ) - 1)"
+        denominator = twoλ
+        width = maximum(length, [numerator, denominator]) + 2
+        println(io, lpad(numerator, (width - length(numerator)) ÷ 2 + length(numerator)))
+        println(io, "-"^width)
+        println(io, lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
+    end
+
+    return nothing
+end
 
 #####
 ##### Internal methods that traits redirect to
