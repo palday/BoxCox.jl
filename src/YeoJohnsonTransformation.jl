@@ -155,33 +155,48 @@ end
 ##### Internal methods that traits redirect to
 #####
 
+# setup linear regression
+function _loglikelihood_yeojohnson(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number};
+                                   kwargs...)
+    return _loglikelihood_yeojohnson!(similar(y), qr(X), X, y, λ)
+end
+
+# do linear regression
 function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, Xqr::Factorization,
                                 X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number;
                                 kwargs...)
     _yeojohnson!(y_trans, y, λ; kwargs...)
     y_trans -= X * (Xqr \ y_trans)
-    return _loglikelihood_yeojohnson(y_trans)
+    return _loglikelihood_yeojohnson(y_trans, λ)
 end
 
+# setup mean centering
+function _loglikelihood_yeojohnson(λ::Number, ::Nothing, y::Vector{<:Number}; kwargs...)
+    return _loglikelihood_yeojohnson!(similar(y), y, λ)
+end
+
+# mean center (makes life easier and more consistent)
 function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number;
                                 kwargs...)
     _yeojohnson!(y_trans, y, λ; kwargs...)
     y_trans .-= mean(y_trans)
-    return _loglikelihood_yeojohnson(y_trans)
+    return _loglikelihood_yeojohnson(y_trans, λ)
 end
 
-function _loglikelihood_yeojohnson(y_trans::Vector{<:Number})
-    return -0.5 * length(y_trans) * log(sum(abs2, y_trans))
+# actual likelihood computation
+function _loglikelihood_yeojohnson(y_trans::Vector{<:Number}, λ::Number)
+    n = length(y_trans)
+    σ² = var(y_trans)
+    @info "" λ
+    # we've mean centered so sum(abs2, y_trans) gives us the mean deviation
+    return -0.5 * n * log2π +
+           -0.5 * n * log(σ²) +
+           -sum(abs2, y_trans) / (2 * σ²) +
+           (λ - 1) * sum(x -> copysign(log1p(abs(x)), x), y_trans)
 end
 
-function _loglikelihood_yeojohnson(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number};
-                               kwargs...)
-    return _loglikelihood_yeojohnson!(similar(y), qr(X), X, y, λ)
-end
-
-function _loglikelihood_yeojohnson(λ::Number, ::Nothing, y::Vector{<:Number}; kwargs...)
-    return _loglikelihood_yeojohnson!(similar(y), y, λ)
-end
+# plants = [6.1, -8.4, 1.0, 2.0, 0.7, 2.9, 3.5, 5.1, 1.8, 3.6, 7.0,  3.0, 9.3, 7.5, -6.0]
+# λ = 1.305, μ = 4.570, σ² = 29.876, lrt compared to lamba=1 is 3.873, p=0.0499
 
 # no domain restrictions here besides real values 😎
 _input_check_yeojohnson(::Any) = nothing
@@ -195,5 +210,5 @@ _input_check_yeojohnson(::Any) = nothing
 _input_check(::Type{<:YeoJohnsonTransformation}) =_input_check_yeojohnson
 _llfunc(::Type{<:YeoJohnsonTransformation}) = _loglikelihood_yeojohnson
 _llfunc!(::Type{<:YeoJohnsonTransformation}) = _loglikelihood_yeojohnson!
-# XXX should this be identity???
-_scaling(::Type{<:YeoJohnsonTransformation}) = geomean
+# XXX should this be geomean like boxcox???
+_scaling(::Type{<:YeoJohnsonTransformation}) = identity
