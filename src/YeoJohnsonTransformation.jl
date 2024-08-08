@@ -62,7 +62,7 @@ See also [`YeoJohnsonTransformation`](@ref).
 # References
 Yeo, I.-K., & Johnson, R. A. (2000). A new family of power transformations to improve normality or symmetry. Biometrika, 87(4), 954–959. https://doi.org/10.1093/biomet/87.4.954
 """
-yeojohnson(λ; kwargs...) = Base.Fix1(λ)
+yeojohnson(λ; kwargs...) = x -> yeojohnson(λ, x; kwargs...)
 function yeojohnson(λ, x; atol=0)
     if y >= 0
         if !isapprox(λ, 0; atol)
