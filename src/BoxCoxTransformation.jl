@@ -64,7 +64,7 @@ See also [`BoxCoxTransformation`](@ref).
 
 Box, George E. P.; Cox, D. R. (1964). "An analysis of transformations". _Journal of the Royal Statistical Society_, Series B. 26 (2): 211--252.
 """
-boxcox(λ; kwargs...) = x -> boxcox(λ, x; kwargs...)
+boxcox(λ; kwargs...) = Base.Fix1(λ)
 function boxcox(λ, x; atol=0)
     if isapprox(λ, 0; atol)
         logx = log(x)

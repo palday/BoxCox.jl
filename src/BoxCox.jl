@@ -15,15 +15,13 @@ using StatsFuns
 # XXX I have no idea why this is necessary, but otherwise isdefined(BoxCox, :params) returns false
 using StatsAPI: params
 
-export BoxCoxTransformation,
-       boxcox,
-       confint,
-       boxcoxplot,
-       boxcoxplot!,
+export confint,
        fit,
        loglikelihood,
        nobs,
        params
+
+export boxcoxplot, boxcoxplot!
 
 """
     PowerTransformation
@@ -35,6 +33,11 @@ abstract type PowerTransformation end
 # struct BickelDoksumTransformation <: PowerTransformation end
 
 include("BoxCoxTransformation.jl")
+export BoxCoxTransformation, boxcox
+
+include("YeoJohnsonTransformation.jl")
+export YeoJohnsonTransformation, yeojohnson
+
 
 #####
 ##### Base methods
