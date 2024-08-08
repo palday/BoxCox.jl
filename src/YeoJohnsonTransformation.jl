@@ -106,7 +106,7 @@ function _yeojohnson!(y_trans, y, λ; kwargs...)
 end
 
 
-# StatsAPI.confint -- can re refactor boxcox slightly so that we can share an implementaiton?
+# StatsAPI.confint -- can re refactor boxcox slightly so that we can share an implementation?
 # Base.show
 
 #####
