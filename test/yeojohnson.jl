@@ -82,6 +82,8 @@ resultant transformation:
 
 y (the identity)
 """
+    @test sprint(show, yt) == output
+
     yt = YeoJohnsonTransformation(; λ=0.0001, y=[], X=nothing, atol=1e-2)
     output = """Yeo-Johnson transformation
 
@@ -99,7 +101,6 @@ For y < 0:
 ---------------------------
          (2 - 0.0)
 """
-
     @test sprint(show, yt) == output
 
     yt = YeoJohnsonTransformation(; λ=2.0001, y=[], X=nothing, atol=1e-2)
