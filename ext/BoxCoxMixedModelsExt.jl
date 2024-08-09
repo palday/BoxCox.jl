@@ -9,7 +9,7 @@ using BoxCox: _boxcox!, geomean, chisqinvcdf,
               _loglikelihood_boxcox,
               _llfunc, _llfunc!,
               _input_check,
-              _scaling,
+              _centering, _scaling,
               PowerTransformation
 using MixedModels: refit!
 
@@ -52,9 +52,9 @@ function StatsAPI.fit(T::Type{<:PowerTransformation}, model::LinearMixedModel; p
     isfitted(model) ||
         throw(ArgumentError("Expected model to be fitted, but `isfitted(model)` is false."))
     y = response(model)
+    # we modify, so let's make a copy!
+    y =  (y .- _centering(T)(y)) ./ _scaling(T)(y)
     _input_check(T)(y)
-    y = float.(y)  # we modify, so let's make a copy!
-    y ./= _scaling(T)(y)
     model = deepcopy(model)
     opt = NLopt.Opt(algorithm, 1)
     NLopt.xtol_abs!(opt, opt_atol) # relative criterion on parameter values

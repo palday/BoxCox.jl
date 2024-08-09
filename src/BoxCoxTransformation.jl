@@ -264,4 +264,5 @@ end
 _input_check(::Type{<:BoxCoxTransformation}) =_input_check_boxcox
 _llfunc(::Type{<:BoxCoxTransformation}) = _loglikelihood_boxcox
 _llfunc!(::Type{<:BoxCoxTransformation}) = _loglikelihood_boxcox!
+_centering(::Type{<:BoxCoxTransformation}) = Returns(0)
 _scaling(::Type{<:BoxCoxTransformation}) = geomean

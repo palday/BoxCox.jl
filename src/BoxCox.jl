@@ -139,8 +139,8 @@ function StatsAPI.fit(T::Type{<:PowerTransformation}, y::AbstractVector{<:Number
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1)
     _input_check(T)(y)
-    y = float.(y)  # we modify, so let's make a copy!
-    y ./= _scaling(T)(y)
+    # we modify, so let's make a copy!
+    y =  (y .- _centering(T)(y)) ./ _scaling(T)(y)
     opt = NLopt.Opt(algorithm, 1)
     NLopt.xtol_abs!(opt, opt_atol) # relative criterion on parameter values
     NLopt.xtol_rel!(opt, opt_rtol) # relative criterion on parameter values
@@ -163,8 +163,8 @@ function StatsAPI.fit(T::Type{<:PowerTransformation}, X::AbstractMatrix{<:Number
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1)
     _input_check(T)(y)
-    y = float.(y) # we modify, so let's make a copy!
-    y ./= _scaling(T)(y)
+    # we modify, so let's make a copy!
+    y =  (y .- _centering(T)(y)) ./ _scaling(T)(y)
     X = convert(Matrix{Float64}, X)
     Xqr = qr(X)
 
