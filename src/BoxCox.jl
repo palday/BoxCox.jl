@@ -271,6 +271,8 @@ end
     @compile_workload begin
         fit(BoxCoxTransformation, y2)
         fit(BoxCoxTransformation, X, y2)
+        fit(YeoJohnsonTransformation, y)
+        fit(YeoJohnsonTransformation, X, y)
     end
 end
 

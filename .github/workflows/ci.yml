@@ -21,9 +21,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        version: [1.9, 1]
-        arch: [x64]
-        os: [ubuntu-latest]
+        version:
+            - '1.9'
+            - '1'
+        os:
+            - ubuntu-latest
+            - macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,7 +34,6 @@ jobs:
         uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
         with:
             cache-compiled: "true"
@@ -52,15 +54,15 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Setup Node for Percy
-        if: ${{ matrix.version == '1' }}
+        if: ${{ matrix.version == '1' && matrix.os == 'ubuntu-latest' }}
         uses: actions/setup-node@v4
         with:
           node-version: '14'
       - name: Install Percy CI
-        if: ${{ matrix.version == '1' }}
+        if: ${{ matrix.version == '1' && matrix.os == 'ubuntu-latest' }}
         run: npm install --save-dev @percy/cli
       - name: Percy Upload
-        if: ${{ matrix.version == '1' }}
+        if: ${{ matrix.version == '1' && matrix.os == 'ubuntu-latest' }}
         run: |
           ls ./test/out/ # useful for debugging
           npx percy upload ./test/out
