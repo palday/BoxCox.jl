@@ -105,8 +105,6 @@ function _yeojohnson!(y_trans, y, λ; kwargs...)
     return y_trans
 end
 
-_identity(yt::YeoJohnsonTransformation) = YeoJohnsonTransformation(; yt.y, λ=1, yt.X, yt.atol)
-
 function Base.show(io::IO, t::YeoJohnsonTransformation)
     println(io, "Yeo-Johnson transformation")
     @printf io "\nestimated λ: %.4f" t.λ

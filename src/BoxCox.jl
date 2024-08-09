@@ -251,11 +251,13 @@ StatsAPI.pvalue(x::PowerTransformation) = 1 - chisqcdf(1, lrt0(x))
 StatsAPI.response(x::PowerTransformation) = x.y
 
 lrt0(x::PowerTransformation) = 2 * abs(loglikelihood(x) - loglikelihood(_identity(x)))
+function _identity(t::T) where {T <: PowerTransformation}
+    return T(; y=response(t), λ=1, X=modelmatrix(t), t.atol)
+end
 
 #####
 ##### Precompilation
 #####
-
 
 @setup_workload begin
     # Putting some things in `@setup_workload` instead of `@compile_workload` can reduce the size of the
