@@ -5,3 +5,5 @@ include("setup_tests.jl")
 end
 
 @testset ExtendedTestSet "Box-Cox" include("boxcox.jl")
+
+@testset ExtendedTestSet "Yeo-Johnson" include("boxcox.jl")

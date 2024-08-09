@@ -26,8 +26,8 @@ y_transformed = yj.(y)
 Base.@kwdef struct YeoJohnsonTransformation{T} <: PowerTransformation
     "The transformation parameter"
     λ::Float64
-    "The original response, normalized by its geometric mean"
-    y::Vector{Float64} # observed response normalized by its geometric mean
+    "The original response"
+    y::Vector{Float64}
     "A model matrix for the conditional distribution or `Nothing` for the unconditional distribution "
     X::T
     "Tolerance for comparing λ to zero or two. Default is 1e-8"
@@ -167,10 +167,10 @@ function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, Xqr::Factorizatio
                                 kwargs...)
     _yeojohnson!(y_trans, y, λ; kwargs...)
     y_trans -= X * (Xqr \ y_trans)
-    return _loglikelihood_yeojohnson(y_trans, λ)
+    return _loglikelihood_yeojohnson(y_trans, y, λ)
 end
 
-# setup marginal distrbution
+# setup marginal distribution
 function _loglikelihood_yeojohnson(λ::Number, ::Nothing, y::Vector{<:Number}; kwargs...)
     return _loglikelihood_yeojohnson!(similar(y), y, λ)
 end
@@ -192,16 +192,6 @@ function _loglikelihood_yeojohnson(y_trans::Vector{<:Number}, y::Vector{<:Number
     return -0.5 * n * (1 + log2π + log(σ²)) + penalty
 end
 
-# plants = [6.1, -8.4, 1.0, 2.0, 0.7, 2.9, 3.5, 5.1, 1.8, 3.6, 7.0,  3.0, 9.3, 7.5, -6.0]
-# λ = 1.305, μ = 4.570, σ² = 29.876, lrt compared to lamba=1 is, 3.873 p=0.0499
-# yt0 = YeoJohnsonTransformation(; λ=1, X=nothing, y=plants)
-# yt1 = YeoJohnsonTransformation(; λ=1.305, X=nothing, y=plants)
-# yt0.(plants) ≈ plants
-# isapprox(mean(yt1.(plants)), 4.570; atol=0.005)
-# isapprox(var(yt1.(plants); corrected=false), 29.876; rtol=0.005)
-# lrt = 2 * abs(loglikelihood(yt0) - loglikelihood(yt1))
-# isapprox(lrt, 3.873; rtol=0.005)
-# no domain restrictions here besides real values 😎
 _input_check_yeojohnson(::Any) = nothing
 
 #####
@@ -213,5 +203,5 @@ _input_check_yeojohnson(::Any) = nothing
 _input_check(::Type{<:YeoJohnsonTransformation}) =_input_check_yeojohnson
 _llfunc(::Type{<:YeoJohnsonTransformation}) = _loglikelihood_yeojohnson
 _llfunc!(::Type{<:YeoJohnsonTransformation}) = _loglikelihood_yeojohnson!
-# XXX should this be geomean like boxcox???
-_scaling(::Type{<:YeoJohnsonTransformation}) = identity
+_scaling(::Type{<:YeoJohnsonTransformation}) = Returns(1)
+_centering(::Type{<:YeoJohnsonTransformation}) = Returns(0)

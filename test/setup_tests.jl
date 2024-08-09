@@ -4,6 +4,7 @@ using CairoMakie
 using MixedModels
 using MixedModels: dataset
 using RDatasets: dataset as rdataset
+using Statistics
 using StatsModels
 using Test
 using TestSetExtensions
