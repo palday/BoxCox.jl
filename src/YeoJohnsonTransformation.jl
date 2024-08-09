@@ -170,34 +170,37 @@ function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, Xqr::Factorizatio
     return _loglikelihood_yeojohnson(y_trans, λ)
 end
 
-# setup mean centering
+# setup marginal distrbution
 function _loglikelihood_yeojohnson(λ::Number, ::Nothing, y::Vector{<:Number}; kwargs...)
     return _loglikelihood_yeojohnson!(similar(y), y, λ)
 end
 
-# mean center (makes life easier and more consistent)
+# do marginal distribution
 function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number;
                                 kwargs...)
     _yeojohnson!(y_trans, y, λ; kwargs...)
-    y_trans .-= mean(y_trans)
-    return _loglikelihood_yeojohnson(y_trans, λ)
+    return _loglikelihood_yeojohnson(y_trans, y, λ)
 end
 
 # actual likelihood computation
-function _loglikelihood_yeojohnson(y_trans::Vector{<:Number}, λ::Number)
+function _loglikelihood_yeojohnson(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number)
     n = length(y_trans)
-    σ² = var(y_trans)
-    @info "" λ
-    # we've mean centered so sum(abs2, y_trans) gives us the mean deviation
-    return -0.5 * n * log2π +
-           -0.5 * n * log(σ²) +
-           -sum(abs2, y_trans) / (2 * σ²) +
-           (λ - 1) * sum(x -> copysign(log1p(abs(x)), x), y_trans)
+    σ² = var(y_trans; corrected=false)
+    penalty = (λ - 1) * sum(y) do x
+        return copysign(log1p(abs(x)), x)
+    end
+    return -0.5 * n * (1 + log2π + log(σ²)) + penalty
 end
 
 # plants = [6.1, -8.4, 1.0, 2.0, 0.7, 2.9, 3.5, 5.1, 1.8, 3.6, 7.0,  3.0, 9.3, 7.5, -6.0]
-# λ = 1.305, μ = 4.570, σ² = 29.876, lrt compared to lamba=1 is 3.873, p=0.0499
-
+# λ = 1.305, μ = 4.570, σ² = 29.876, lrt compared to lamba=1 is, 3.873 p=0.0499
+# yt0 = YeoJohnsonTransformation(; λ=1, X=nothing, y=plants)
+# yt1 = YeoJohnsonTransformation(; λ=1.305, X=nothing, y=plants)
+# yt0.(plants) ≈ plants
+# isapprox(mean(yt1.(plants)), 4.570; atol=0.005)
+# isapprox(var(yt1.(plants); corrected=false), 29.876; rtol=0.005)
+# lrt = 2 * abs(loglikelihood(yt0) - loglikelihood(yt1))
+# isapprox(lrt, 3.873; rtol=0.005)
 # no domain restrictions here besides real values 😎
 _input_check_yeojohnson(::Any) = nothing
 
