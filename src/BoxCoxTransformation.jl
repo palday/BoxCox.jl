@@ -168,6 +168,7 @@ end
 ##### Internal methods that traits redirect to
 #####
 
+# used in Makie extension
 function _loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
                                λ::AbstractVector{<:Number})
     y_trans = similar(y)
@@ -179,6 +180,7 @@ function _loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
     return ll
 end
 
+# used in Makie extension
 function _loglikelihood_boxcox(::Nothing, y::Vector{<:Number},
                                λ::AbstractVector{<:Number})
     y_trans = similar(y)

@@ -156,6 +156,7 @@ end
 ##### Internal methods that traits redirect to
 #####
 
+# used in Makie extension
 function _loglikelihood_yeojohnson(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
                                    λ::AbstractVector{<:Number})
     y_trans = similar(y)
@@ -167,6 +168,7 @@ function _loglikelihood_yeojohnson(X::AbstractMatrix{<:Number}, y::Vector{<:Numb
     return ll
 end
 
+# used in Makie extension
 function _loglikelihood_yeojohnson(::Nothing, y::Vector{<:Number},
                                    λ::AbstractVector{<:Number})
     y_trans = similar(y)

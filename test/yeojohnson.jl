@@ -145,20 +145,23 @@ For y < 0:
     @test sprint(show, yt) == output
 end
 
-# @testset "mixed models" begin
-#     progress = false
-#     model = fit(MixedModel, @formula(reaction ~ 1 + days + (1 + days | subj)),
-#                 dataset(:sleepstudy); progress)
-#     bc = fit(BoxCoxTransformation, model; progress)
-#     @test only(params(bc)) ≈ -1 atol = 0.1
-#     ci = confint(bc; fast=false)
-#     ref_ci = [-1.73449, -0.413651]
-#     @test all(isapprox.(confint(bc; fast=true), ci; atol=1e-2))
-#     @test all(isapprox.(ci, ref_ci; atol=1e-2))
+@testset "mixed models" begin
+    progress = false
+    model = fit(MixedModel, @formula(reaction ~ 1 + days + (1 + days | subj)),
+                dataset(:sleepstudy); progress)
+    yt = fit(YeoJohnsonTransformation, model; progress)
 
-#     @testset "mixed models + makie integration" begin
-#         bcpmm = boxcoxplot(bc; conf_level=0.95)
-#         @test bcpmm isa Makie.Figure
-#         save(path("boxcox_mixedmodel.png"), bcpmm)
-#     end
-# end
+    # since the response values are all positive, this should essentially reduce
+    # to the Box-Cox transformation and so we use those as reference values
+    @test only(params(yt)) ≈ -1 atol = 0.1
+    ci = confint(yt; fast=false)
+    ref_ci = [-1.73449, -0.413651]
+    @test all(isapprox.(confint(yt; fast=true), ci; atol=0.01))
+    @test all(isapprox.(ci, ref_ci; rtol=0.05))
+
+    @testset "mixed models + makie integration" begin
+        p = boxcoxplot(yt; conf_level=0.95)
+        @test p isa Makie.Figure
+        save(path("yeojohnson_mixedmodel.png"), p)
+    end
+end
