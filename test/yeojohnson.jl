@@ -16,6 +16,7 @@ p = 0.0499
                    σ²; rtol=0.005)
     @test isapprox(2 * abs(loglikelihood(yt0) - loglikelihood(yt1)),
                    lrt; rtol=0.005)
+    @test isapprox(pvalue(yt1), p; atol=0.005)
 end
 
 @testset "single vector" begin
@@ -103,42 +104,78 @@ end
 #     @test boxcox(2, 0) == -1 / 2
 # end
 
-# @testset "show" begin
-#     bc = BoxCoxTransformation(; λ=1, y=[], X=nothing)
+@testset "show" begin
+    yt = YeoJohnsonTransformation(; λ=1, y=[], X=nothing)
+    output = """Yeo-Johnson transformation
 
-#     output = """Box-Cox transformation
+estimated λ: 1.0000
+resultant transformation:
 
-# estimated λ: 1.0000
-# resultant transformation:
+y (the identity)
+"""
+    yt = YeoJohnsonTransformation(; λ=0.0001, y=[], X=nothing, atol=1e-2)
+    output = """Yeo-Johnson transformation
 
-# y (the identity)
-# """
-#     @test sprint(show, bc) == output
+estimated λ: 0.0001
+resultant transformation:
 
-#     bc = BoxCoxTransformation(; λ=1e-3, y=[], X=nothing, atol=1e-2)
-#     output = """Box-Cox transformation
+For y ≥ 0,
 
-# estimated λ: 0.0010
-# resultant transformation:
+log(y + 1)
 
-# log y
-# """
 
-#     @test sprint(show, bc) == output
+For y < 0:
 
-#     bc = BoxCoxTransformation(; λ=2, y=[], X=nothing, atol=1e-2)
+ -((-y + 1)^(2 - 0.0) - 1)
+---------------------------
+         (2 - 0.0)
+"""
 
-#     output = """Box-Cox transformation
+    @test sprint(show, yt) == output
 
-# estimated λ: 2.0000
-# resultant transformation:
+    yt = YeoJohnsonTransformation(; λ=2.0001, y=[], X=nothing, atol=1e-2)
+    output = """Yeo-Johnson transformation
 
-#  y^2.0 - 1
-# -----------
-#     2.0
-# """
-#     @test sprint(show, bc) == output
-# end
+estimated λ: 2.0001
+resultant transformation:
+
+For y ≥ 0,
+
+ (y + 1)^2.0 - 1
+-----------------
+       2.0
+
+
+For y < 0:
+
+-log(-y + 1) for y < 0
+"""
+
+    @test sprint(show, yt) == output
+    yt = YeoJohnsonTransformation(; λ=1.305, X=nothing, y=plants)
+
+    output = """Yeo-Johnson transformation
+
+estimated λ: 1.3050
+p-value: 0.0488
+
+resultant transformation:
+
+For y ≥ 0,
+
+ (y + 1)^1.3 - 1
+-----------------
+       1.3
+
+
+For y < 0:
+
+ -((-y + 1)^(2 - 1.3) - 1)
+---------------------------
+         (2 - 1.3)
+"""
+    @test sprint(show, yt) == output
+end
 
 # @testset "mixed models" begin
 #     progress = false

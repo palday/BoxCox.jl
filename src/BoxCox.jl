@@ -12,14 +12,16 @@ using StatsAPI
 using StatsBase
 using StatsFuns
 
+using StatsBase: PValue
 # XXX I have no idea why this is necessary, but otherwise isdefined(BoxCox, :params) returns false
-using StatsAPI: params
+using StatsAPI: params, pvalue
 
 export confint,
        fit,
        loglikelihood,
        nobs,
-       params
+       params,
+       pvalue
 
 export boxcoxplot, boxcoxplot!
 
@@ -197,8 +199,10 @@ StatsAPI.nobs(x::PowerTransformation) = length(response(x))
 Return a vector of all parameters, i.e. `[λ]`.
 """
 StatsAPI.params(x::PowerTransformation) = [x.λ]
+StatsAPI.pvalue(x::PowerTransformation) = 1 - chisqcdf(1, lrt0(x))
 StatsAPI.response(x::PowerTransformation) = x.y
 
+lrt0(x::PowerTransformation) = 2 * abs(loglikelihood(x) - loglikelihood(_identity(x)))
 
 #####
 ##### Precompilation

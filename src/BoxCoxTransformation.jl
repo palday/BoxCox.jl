@@ -185,7 +185,9 @@ end
 function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, "Box-Cox transformation")
     @printf io "\nestimated λ: %.4f" t.λ
-    # println(io, "\np-value: ", StatsBase.PValue(_pvalue(t)))
+    # if !isempty(response(t))
+    #     println(io, "\np-value: ", StatsBase.PValue(pvalue(t)))
+    # end
     println(io, "\nresultant transformation:\n")
 
     if isapprox(t.λ, 1; t.atol)
@@ -248,12 +250,6 @@ function _input_check_boxcox(y)
     any(<=(0), y) && throw(ArgumentError("all y values must be greater than zero"))
     return nothing
 end
-
-# function _pvalue(bc::BoxCoxTransformation)
-#     llhat = loglikelihood(bc)
-#     ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
-#     return chisqcdf(1, 2 * (llhat - ll0))
-# end
 
 #####
 ##### Traits
