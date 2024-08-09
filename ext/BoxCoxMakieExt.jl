@@ -31,7 +31,7 @@ function BoxCox.boxcoxplot!(ax::Axis, t::T;
                             n_steps=21,
                             λ=nothing,
                             conf_level=nothing,
-                            attributes...) where {T <: PowerTransformation}
+                            attributes...) where {T<:PowerTransformation}
     ax.xlabel = xlabel
     ax.ylabel = ylabel
 

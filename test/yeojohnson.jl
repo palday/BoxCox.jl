@@ -1,5 +1,5 @@
 # taken from the Yeo-Johnson paper
-plants = [6.1, -8.4, 1.0, 2.0, 0.7, 2.9, 3.5, 5.1, 1.8, 3.6, 7.0,  3.0, 9.3, 7.5, -6.0]
+plants = [6.1, -8.4, 1.0, 2.0, 0.7, 2.9, 3.5, 5.1, 1.8, 3.6, 7.0, 3.0, 9.3, 7.5, -6.0]
 λref = 1.305
 μ = 4.570
 σ² = 29.876
@@ -34,20 +34,21 @@ end
     plants_table = (; plants)
     yt = fit(YeoJohnsonTransformation, @formula(plants ~ 1), plants_table)
     @test isapprox(only(params(yt)), only(params(ytref)); rtol=0.005)
-    @test loglikelihood(yt) ≈ loglikelihood(ytref) rtol=0.005
+    @test loglikelihood(yt) ≈ loglikelihood(ytref) rtol = 0.005
     @test nobs(yt) == length(plants)
     @test nobs(empty!(yt)) == 0
     @test isempty(yt)
 end
 
-@testset "confint: $name" for (name, X) in zip(["marginal", "conditional"], [nothing, ones(length(plants), 1)])
+@testset "confint: $name" for (name, X) in zip(["marginal", "conditional"],
+                                               [nothing, ones(length(plants), 1)])
     yt1 = YeoJohnsonTransformation(; λ=λref, X, y=plants)
     ci = confint(yt1; fast=false)
     @test first(ci) < only(params(yt1)) < last(ci)
 
     fastci = confint(yt1; fast=true)
     @test first(ci) ≈ first(fastci)
-    @test last(ci) ≈ last(fastci) rtol=0.05
+    @test last(ci) ≈ last(fastci) rtol = 0.05
 end
 
 @testset "plotting" begin

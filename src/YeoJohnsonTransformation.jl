@@ -129,7 +129,8 @@ function Base.show(io::IO, t::YeoJohnsonTransformation)
         width = maximum(length, [numerator, denominator]) + 2
         println(io, lpad(numerator, (width - length(numerator)) ÷ 2 + length(numerator)))
         println(io, "-"^width)
-        println(io, lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
+        println(io,
+                lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
     end
     println(io)
     println(io)
@@ -144,7 +145,8 @@ function Base.show(io::IO, t::YeoJohnsonTransformation)
         width = maximum(length, [numerator, denominator]) + 2
         println(io, lpad(numerator, (width - length(numerator)) ÷ 2 + length(numerator)))
         println(io, "-"^width)
-        println(io, lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
+        println(io,
+                lpad(denominator, (width - length(denominator)) ÷ 2 + length(denominator)))
     end
 
     return nothing
@@ -178,15 +180,16 @@ function _loglikelihood_yeojohnson(::Nothing, y::Vector{<:Number},
 end
 
 # setup linear regression
-function _loglikelihood_yeojohnson(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number};
+function _loglikelihood_yeojohnson(λ::Number, X::AbstractMatrix{<:Number},
+                                   y::Vector{<:Number};
                                    kwargs...)
     return _loglikelihood_yeojohnson!(similar(y), qr(X), X, y, λ)
 end
 
 # do linear regression
 function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, Xqr::Factorization,
-                                X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number;
-                                kwargs...)
+                                    X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number;
+                                    kwargs...)
     _yeojohnson!(y_trans, y, λ; kwargs...)
     y_trans -= X * (Xqr \ y_trans)
     return _loglikelihood_yeojohnson(y_trans, y, λ)
@@ -198,14 +201,16 @@ function _loglikelihood_yeojohnson(λ::Number, ::Nothing, y::Vector{<:Number}; k
 end
 
 # do marginal distribution
-function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number;
-                                kwargs...)
+function _loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, y::Vector{<:Number},
+                                    λ::Number;
+                                    kwargs...)
     _yeojohnson!(y_trans, y, λ; kwargs...)
     return _loglikelihood_yeojohnson(y_trans, y, λ)
 end
 
 # actual likelihood computation
-function _loglikelihood_yeojohnson(y_trans::Vector{<:Number}, y::Vector{<:Number}, λ::Number)
+function _loglikelihood_yeojohnson(y_trans::Vector{<:Number}, y::Vector{<:Number},
+                                   λ::Number)
     n = length(y_trans)
     σ² = var(y_trans; corrected=false)
     penalty = (λ - 1) * sum(y) do x
@@ -222,7 +227,7 @@ _input_check_yeojohnson(::Any) = nothing
 
 # need the <: to handle the parameterized type
 
-_input_check(::Type{<:YeoJohnsonTransformation}) =_input_check_yeojohnson
+_input_check(::Type{<:YeoJohnsonTransformation}) = _input_check_yeojohnson
 _llfunc(::Type{<:YeoJohnsonTransformation}) = _loglikelihood_yeojohnson
 _llfunc!(::Type{<:YeoJohnsonTransformation}) = _loglikelihood_yeojohnson!
 _scaling(::Type{<:YeoJohnsonTransformation}) = Returns(1)

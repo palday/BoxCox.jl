@@ -40,7 +40,6 @@ export BoxCoxTransformation, boxcox
 include("YeoJohnsonTransformation.jl")
 export YeoJohnsonTransformation, yeojohnson
 
-
 #####
 ##### Base methods
 #####
@@ -55,7 +54,8 @@ Compare the λ parameter of `x` and `y` for approximate equality.
 !!! note
     Other internal structures of `PowerTransformation` are not compared.
 """
-function Base.isapprox(x::T, y::S; kwargs...) where {T <: PowerTransformation, S <: PowerTransformation}
+function Base.isapprox(x::T, y::S;
+                       kwargs...) where {T<:PowerTransformation,S<:PowerTransformation}
     # XXX why not do this through the type signature? Well, we want to allow e.g.
     # BoxCoxTransformation{Nothing} and BoxCoxTransformation{Float32} to be compared
     typejoin(T, S) === PowerTransformation &&
@@ -88,7 +88,6 @@ Base.isempty(x::PowerTransformation) = any(isempty, [x.y, something(modelmatrix(
 ##### StatsAPI methods
 #####
 
-
 """
     StatsAPI.confint(x::PowerTransformation; level::Real=0.95, fast::Bool=nobs(bc) > 10_000)
 
@@ -101,7 +100,7 @@ safe assumption for approximate values and halves computation time.
 If not `fast`, then the lower and upper bounds are computed separately.
 """
 function StatsAPI.confint(x::T; level::Real=0.95,
-                          fast::Bool=nobs(x) > 10_000) where {T <: PowerTransformation}
+                          fast::Bool=nobs(x) > 10_000) where {T<:PowerTransformation}
     lltarget = loglikelihood(x) - chisqinvcdf(1, level) / 2
     opt = NLopt.Opt(:LN_BOBYQA, 1)
     X = modelmatrix(x)
@@ -185,12 +184,13 @@ The `opt_` keyword arguments are tolerances passed onto NLopt.
 
 `progress` enables progress bars for intermediate model fits during the optimization process.
 """
-function StatsAPI.fit(T::Type{<:PowerTransformation}, y::AbstractVector{<:Number}; atol=1e-8,
+function StatsAPI.fit(T::Type{<:PowerTransformation}, y::AbstractVector{<:Number};
+                      atol=1e-8,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1)
     _input_check(T)(y)
     # we modify, so let's make a copy!
-    y =  (y .- _centering(T)(y)) ./ _scaling(T)(y)
+    y = (y .- _centering(T)(y)) ./ _scaling(T)(y)
     opt = NLopt.Opt(algorithm, 1)
     NLopt.xtol_abs!(opt, opt_atol) # relative criterion on parameter values
     NLopt.xtol_rel!(opt, opt_rtol) # relative criterion on parameter values
@@ -214,7 +214,7 @@ function StatsAPI.fit(T::Type{<:PowerTransformation}, X::AbstractMatrix{<:Number
                       maxiter=-1)
     _input_check(T)(y)
     # we modify, so let's make a copy!
-    y =  (y .- _centering(T)(y)) ./ _scaling(T)(y)
+    y = (y .- _centering(T)(y)) ./ _scaling(T)(y)
     X = convert(Matrix{Float64}, X)
     Xqr = qr(X)
 
@@ -234,7 +234,7 @@ function StatsAPI.fit(T::Type{<:PowerTransformation}, X::AbstractMatrix{<:Number
     return T(; λ=only(λ), y, X, atol)
 end
 
-function StatsAPI.loglikelihood(t::T) where {T <: PowerTransformation}
+function StatsAPI.loglikelihood(t::T) where {T<:PowerTransformation}
     return _llfunc(T)(t.λ, t.X, t.y; t.atol)
 end
 
@@ -251,7 +251,7 @@ StatsAPI.pvalue(x::PowerTransformation) = 1 - chisqcdf(1, lrt0(x))
 StatsAPI.response(x::PowerTransformation) = x.y
 
 lrt0(x::PowerTransformation) = 2 * abs(loglikelihood(x) - loglikelihood(_identity(x)))
-function _identity(t::T) where {T <: PowerTransformation}
+function _identity(t::T) where {T<:PowerTransformation}
     return T(; y=response(t), λ=1, X=modelmatrix(t), t.atol)
 end
 

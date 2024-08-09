@@ -191,7 +191,6 @@ function _loglikelihood_boxcox(::Nothing, y::Vector{<:Number},
     return ll
 end
 
-
 # pull this out so that we can use it in optimization
 function _loglikelihood_boxcox!(y_trans::Vector{<:Number}, Xqr::Factorization,
                                 X::Matrix{<:Number}, y::Vector{<:Number}, λ::Number;
@@ -232,7 +231,7 @@ end
 
 # need the <: to handle the parameterized type
 
-_input_check(::Type{<:BoxCoxTransformation}) =_input_check_boxcox
+_input_check(::Type{<:BoxCoxTransformation}) = _input_check_boxcox
 _llfunc(::Type{<:BoxCoxTransformation}) = _loglikelihood_boxcox
 _llfunc!(::Type{<:BoxCoxTransformation}) = _loglikelihood_boxcox!
 _centering(::Type{<:BoxCoxTransformation}) = Returns(0)

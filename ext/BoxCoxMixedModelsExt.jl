@@ -21,8 +21,9 @@ MixedModelPowerTransformation = Union{BoxCoxTransformation{LinearMixedModel},
 # TODO: jiggle types slightly so that this works with any powertransformation
 # (maybe make PowerTransformation parametric?)
 function StatsAPI.confint(t::T; level::Real=0.95,
-                          fast::Bool=nobs(t) > 10_000, progress=true) where
-                          {T <: MixedModelPowerTransformation}
+                          fast::Bool=nobs(t) > 10_000,
+                          progress=true) where
+         {T<:MixedModelPowerTransformation}
     lltarget = loglikelihood(t) - chisqinvcdf(1, level) / 2
     opt = NLopt.Opt(:LN_BOBYQA, 1)
     y = response(t)
@@ -54,14 +55,15 @@ function StatsAPI.confint(t::T; level::Real=0.95,
     return [lower, upper]
 end
 
-function StatsAPI.fit(T::Type{<:PowerTransformation}, model::LinearMixedModel; progress=true,
+function StatsAPI.fit(T::Type{<:PowerTransformation}, model::LinearMixedModel;
+                      progress=true,
                       algorithm::Symbol=:LN_BOBYQA, opt_atol=1e-8, opt_rtol=1e-8,
                       maxiter=-1, kwargs...)
     isfitted(model) ||
         throw(ArgumentError("Expected model to be fitted, but `isfitted(model)` is false."))
     y = response(model)
     # we modify, so let's make a copy!
-    y =  (y .- _centering(T)(y)) ./ _scaling(T)(y)
+    y = (y .- _centering(T)(y)) ./ _scaling(T)(y)
     _input_check(T)(y)
     model = deepcopy(model)
     opt = NLopt.Opt(algorithm, 1)
@@ -114,9 +116,10 @@ end
 ##### YeoJohnson
 #####
 
-function BoxCox._loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, model::LinearMixedModel,
-                                       y::Vector{<:Number}, λ::Number;
-                                       progress=true, kwargs...)
+function BoxCox._loglikelihood_yeojohnson!(y_trans::Vector{<:Number},
+                                           model::LinearMixedModel,
+                                           y::Vector{<:Number}, λ::Number;
+                                           progress=true, kwargs...)
     _yeojohnson!(y_trans, y, λ; kwargs...)
     refit!(model, y_trans; progress)
     y_trans .-= fitted(model)
@@ -124,13 +127,13 @@ function BoxCox._loglikelihood_yeojohnson!(y_trans::Vector{<:Number}, model::Lin
 end
 
 function BoxCox._loglikelihood_yeojohnson(λ::Number, model::LinearMixedModel,
-                                      y::Vector{<:Number};
-                                      kwargs...)
+                                          y::Vector{<:Number};
+                                          kwargs...)
     return _loglikelihood_yeojohnson!(similar(response(model)), model, y, λ)
 end
 
 function BoxCox._loglikelihood_yeojohnson(model::LinearMixedModel, y::Vector{<:Number},
-                                      λ::AbstractVector{<:Number})
+                                          λ::AbstractVector{<:Number})
     y_trans = similar(y)
     ll = similar(λ)
     for i in eachindex(ll, λ)
