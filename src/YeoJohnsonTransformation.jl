@@ -43,9 +43,6 @@ end
     yeojohnson(λ, x; atol=0)
 
 ```math
-    yeojohnson(λ; atol=0)
-    yeojohnson(λ, x; atol=0)
-
 \\begin{cases} ((x_i+1)^\\lambda-1)/\\lambda                      &  \\text{if }\\lambda \\neq 0, y \\geq 0 \\\\
                \\log(y_i + 1)                                     &  \\text{if }\\lambda =     0, y \\geq 0 \\\\
                -((-x_i + 1)^{(2-\\lambda)} - 1) / (2 - \\lambda)  &  \\text{if }\\lambda \\neq 2, y <     0 \\\\
