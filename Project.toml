@@ -1,7 +1,7 @@
 name = "BoxCox"
 uuid = "1248164d-f7a6-4bdb-8e8d-8c4a187b3ce6"
 authors = ["Phillip Alday <me@phillipalday.com>"]
-version = "0.3.2"
+version = "0.3.3"
 
 [deps]
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
