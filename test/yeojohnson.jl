@@ -8,7 +8,7 @@ p = 0.0499
 
 @testset "transformation and log-likelihood" begin
     yt0 = YeoJohnsonTransformation(; λ=1, X=nothing, y=plants)
-    yt1 = YeoJohnsonTransformation(; λ=1.305, X=nothing, y=plants)
+    yt1 = YeoJohnsonTransformation(; λ=λref, X=nothing, y=plants)
     @test yt0.(plants) ≈ plants
     @test isapprox(mean(yt1.(plants)),
                    μ; rtol=0.005)
@@ -17,6 +17,7 @@ p = 0.0499
     @test isapprox(2 * abs(loglikelihood(yt0) - loglikelihood(yt1)),
                    lrt; rtol=0.005)
     @test isapprox(pvalue(yt1), p; atol=0.005)
+    @test yeojohnson(λref).(plants) ≈ yt1.(plants)
 end
 
 @testset "single vector" begin
@@ -39,62 +40,37 @@ end
     @test isempty(yt)
 end
 
-# @testset "confint" begin
-#     y = [-0.174865, -0.312804, -1.06157, 1.20795, 0.573458, 0.0566415, 0.0481339, 1.98065,
-#          -0.196412, -0.464189]
-#     y2 = abs2.(y)
-#     X = ones(length(y), 1)
-#     # > y <- c(-0.174865, -0.312804, -1.06157, 1.20795, 0.573458, 0.0566415, 0.0481339, 1.98065,
-#     #      -0.196412, -0.464189)
-#     # > y2 <- y * y
-#     # > bc <- boxcox(y2 ~ 1, data=data.frame(y, y2), lambda=seq(-1, 1, 1e-5))
-#     # > bc$x[which.max(bc$y)]
-#     # [1] 0.06358
-#     # > ci <- bc$x[bc$y > max(bc$y) - 1/2 * qchisq(.95,1)]
-#     # > c(min(ci), max(ci))
-#     # [1] -0.22141  0.35783
+@testset "confint: $name" for (name, X) in zip(["marginal", "conditional"], [nothing, ones(length(plants), 1)])
+    yt1 = YeoJohnsonTransformation(; λ=λref, X, y=plants)
+    ci = confint(yt1; fast=false)
+    @test first(ci) < only(params(yt1)) < last(ci)
 
-#     ci = [-0.22141, 0.35783]
-#     bc1 = fit(BoxCoxTransformation, y2)
-#     bc2 = fit(BoxCoxTransformation, X, y2)
-#     for bc in [bc1, bc2]
-#         @test only(params(bc)) ≈ 0.06358 atol = 1e-5
-#         @test all(isapprox.(confint(bc; fast=false), ci; atol=1e-4))
-#     end
-#     for bc in [bc1, bc2]
-#         @test all(isapprox.(confint(bc; fast=true), ci; atol=1e-2))
-#     end
-# end
+    fastci = confint(yt1; fast=true)
+    @test first(ci) ≈ first(fastci)
+    @test last(ci) ≈ last(fastci) rtol=0.05
+end
 
-# @testset "plotting" begin
-#     vol = fit(BoxCoxTransformation, trees.Volume)
-#     qq = qqnorm(vol)
-#     @test qq isa Makie.FigureAxisPlot
-#     save(path("qq.png"), qq)
+@testset "plotting" begin
+    yt1 = YeoJohnsonTransformation(; λ=λref, X=nothing, y=plants)
+    qq = qqnorm(yt1)
+    @test qq isa Makie.FigureAxisPlot
+    save(path("qq-yeojohnson.png"), qq)
 
-#     qqfig = Figure(; title="QQNorm Mutating")
-#     qqnorm!(Axis(qqfig[1, 1]; xlabel="Theoretical Quantiles", ylabel="Observed Quantiles"),
-#             vol)
-#     @test qqfig isa Makie.Figure
-#     save(path("qqfig.png"), qqfig)
+    qqfig = Figure(; title="QQNorm Mutating")
+    qqnorm!(Axis(qqfig[1, 1]; xlabel="Theoretical Quantiles", ylabel="Observed Quantiles"),
+            yt1)
+    @test qqfig isa Makie.Figure
+    save(path("qqfig-yeojohnson.png"), qqfig)
 
-#     bcp = boxcoxplot(vol)
-#     save(path("boxcox.png"), bcp)
-#     @test bcp isa Makie.Figure
+    p = boxcoxplot(yt1; conf_level=0.95)
+    save(path("yeojohnson.png"), p)
 
-#     volform = fit(BoxCoxTransformation,
-#                   @formula(Volume ~ 1 + log(Height) + log(Girth)),
-#                   trees)
-#     bcpf = Figure()
-#     ax = Axis(bcpf[1, 1]; title="profile log likelihood")
-#     boxcoxplot!(ax, volform; conf_level=0.95,
-#                 xlabel="parameter",
-#                 ylabel="LL")
-#     save(path("boxcox_formula.png"), bcpf)
+    yt1 = YeoJohnsonTransformation(; λ=λref, X=ones(length(plants), 1), y=plants)
+    p = boxcoxplot(yt1; conf_level=0.95)
+    save(path("yeojohnson-matrix.png"), p)
 
-#     @test_throws ArgumentError boxcoxplot(FakeTransformation())
-#     @test_throws ArgumentError boxcoxplot!(ax, FakeTransformation())
-# end
+    @test bcp isa Makie.Figure
+end
 
 # @testset "boxcox function" begin
 #     # log

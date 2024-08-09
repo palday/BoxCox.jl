@@ -1,4 +1,4 @@
-# See also [`boxcoxplot`](@ref), [`params`](@ref), [`boxcox`](@ref).
+# See also [`boxcoxplot`](@ref), [`params`](@ref), [`yeojohnson`](@ref).
 
 """
     YeoJohnsonTransformation <: PowerTransformation
@@ -155,6 +155,28 @@ end
 #####
 ##### Internal methods that traits redirect to
 #####
+
+function _loglikelihood_yeojohnson(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
+                                   λ::AbstractVector{<:Number})
+    y_trans = similar(y)
+    ll = similar(λ)
+    Xqr = qr(X)
+    for i in eachindex(ll, λ)
+        ll[i] = _loglikelihood_yeojohnson!(y_trans, Xqr, X, y, λ[i])
+    end
+    return ll
+end
+
+function _loglikelihood_yeojohnson(::Nothing, y::Vector{<:Number},
+                                   λ::AbstractVector{<:Number})
+    y_trans = similar(y)
+    ll = similar(λ)
+    for i in eachindex(ll, λ)
+        ll[i] = _loglikelihood_yeojohnson!(y_trans, y, λ[i])
+    end
+    return ll
+end
+
 
 # setup linear regression
 function _loglikelihood_yeojohnson(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number};
