@@ -7,6 +7,9 @@ jobs:
   typos-check:
     name: Spell Check with Typos
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: Checkout Actions Repository
         uses: actions/checkout@v4
@@ -21,3 +24,4 @@ jobs:
         with:
           tool_name: Typos
           fail_on_error: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}

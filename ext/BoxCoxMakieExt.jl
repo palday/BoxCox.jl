@@ -3,82 +3,62 @@ module BoxCoxMakieExt
 using BoxCox
 using Makie
 
-using BoxCox: _loglikelihood_boxcox!,
-              _loglikelihood_boxcox,
-              qr, chisqinvcdf,
+using BoxCox: _llfunc!,
+              _llfunc,
+              qr, chisqinvcdf, response,
+              PowerTransformation,
               @setup_workload, @compile_workload
 
 # XXX it would be great to have a 1-1 aspect ratio here,
 # but this seems like something that should be done upstream
-function Makie.qqnorm!(ax::Axis, bc::BoxCoxTransformation, args...; kwargs...)
-    return qqnorm!(ax, bc.(bc.y), args...; kwargs...)
+function Makie.qqnorm!(ax::Axis, t::PowerTransformation, args...; kwargs...)
+    return qqnorm!(ax, t.(response(t), args...; kwargs...))
 end
 
-function Makie.qqnorm(bc::BoxCoxTransformation, args...; kwargs...)
-    return qqnorm(bc.(bc.y), args...; kwargs...)
+function Makie.qqnorm(t::PowerTransformation, args...; kwargs...)
+    return qqnorm(t.(response(t)), args...; kwargs...)
 end
 
-function BoxCox._loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
-                                      λ::AbstractVector{<:Number})
-    y_trans = similar(y)
-    ll = similar(λ)
-    Xqr = qr(X)
-    for i in eachindex(ll, λ)
-        ll[i] = _loglikelihood_boxcox!(y_trans, Xqr, X, y, λ[i])
-    end
-    return ll
-end
-
-function BoxCox._loglikelihood_boxcox(::Nothing, y::Vector{<:Number},
-                                      λ::AbstractVector{<:Number})
-    y_trans = similar(y)
-    ll = similar(λ)
-    for i in eachindex(ll, λ)
-        ll[i] = _loglikelihood_boxcox!(y_trans, y, λ[i])
-    end
-    return ll
-end
-
-function BoxCox.boxcoxplot(bc::BoxCoxTransformation; kwargs...)
+function BoxCox.boxcoxplot(t::PowerTransformation; kwargs...)
     fig = Figure()
-    boxcoxplot!(Axis(fig[1, 1]), bc; kwargs...)
+    boxcoxplot!(Axis(fig[1, 1]), t; kwargs...)
     return fig
 end
 
-function BoxCox.boxcoxplot!(ax::Axis, bc::BoxCoxTransformation;
+function BoxCox.boxcoxplot!(ax::Axis, t::T;
                             xlabel="λ",
                             ylabel="log likelihood",
                             n_steps=21,
                             λ=nothing,
                             conf_level=nothing,
-                            attributes...)
+                            attributes...) where {T<:PowerTransformation}
     ax.xlabel = xlabel
     ax.ylabel = ylabel
 
     ci = nothing
 
     if !isnothing(conf_level)
-        lltarget = loglikelihood(bc) - chisqinvcdf(1, conf_level) / 2
+        lltarget = loglikelihood(t) - chisqinvcdf(1, conf_level) / 2
         hlines!(ax, lltarget; linestyle=:dash, color=:black)
-        ci = confint(bc; level=conf_level)
+        ci = confint(t; level=conf_level)
         vlines!(ax, ci; linestyle=:dash, color=:black)
         text = "$(round(Int, 100 * conf_level))% CI"
         text!(ax, first(ci) + 0.05 * abs(first(ci)), lltarget; text)
     end
 
     if isnothing(λ)
-        ci = @something(ci, confint(bc; fast=true))
+        ci = @something(ci, confint(t; fast=true))
         lower = first(ci) - 0.05 * abs(first(ci))
         upper = last(ci) + 0.05 * abs(last(ci))
         λ = range(lower, upper; length=n_steps)
     end
     sort!(collect(λ))
 
-    (; X, y) = bc
-    ll = _loglikelihood_boxcox(X, y, λ)
+    (; X, y) = t
+    ll = _llfunc(T)(X, y, λ)
 
     scatterlines!(ax, λ, ll; attributes...)
-    vlines!(ax, bc.λ; linestyle=:dash, color=:black)
+    vlines!(ax, t.λ; linestyle=:dash, color=:black)
 
     return plot
 end

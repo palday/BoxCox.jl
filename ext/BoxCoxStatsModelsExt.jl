@@ -1,11 +1,11 @@
 module BoxCoxStatsModelsExt
 
 using BoxCox
-using BoxCox: StatsAPI
+using BoxCox: StatsAPI, PowerTransformation
 using StatsModels
 using Tables
 
-function StatsAPI.fit(::Type{BoxCoxTransformation}, f::FormulaTerm, data;
+function StatsAPI.fit(T::Type{<:PowerTransformation}, f::FormulaTerm, data;
                       contrasts=Dict{Symbol,Any}(), kwargs...)
     tbl = Tables.columntable(data)
     fvars = StatsModels.termvars(f)
@@ -19,7 +19,7 @@ function StatsAPI.fit(::Type{BoxCoxTransformation}, f::FormulaTerm, data;
     sch = schema(f, tbl, contrasts)
     form = apply_schema(f, sch, RegressionModel)
     y, X = modelcols(form, tbl)
-    return fit(BoxCoxTransformation, X, y; kwargs...)
+    return fit(T, X, y; kwargs...)
 end
 
 end # module
