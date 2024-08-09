@@ -18,27 +18,6 @@ function Makie.qqnorm(bc::BoxCoxTransformation, args...; kwargs...)
     return qqnorm(bc.(bc.y), args...; kwargs...)
 end
 
-function BoxCox._loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
-                                      λ::AbstractVector{<:Number})
-    y_trans = similar(y)
-    ll = similar(λ)
-    Xqr = qr(X)
-    for i in eachindex(ll, λ)
-        ll[i] = _loglikelihood_boxcox!(y_trans, Xqr, X, y, λ[i])
-    end
-    return ll
-end
-
-function BoxCox._loglikelihood_boxcox(::Nothing, y::Vector{<:Number},
-                                      λ::AbstractVector{<:Number})
-    y_trans = similar(y)
-    ll = similar(λ)
-    for i in eachindex(ll, λ)
-        ll[i] = _loglikelihood_boxcox!(y_trans, y, λ[i])
-    end
-    return ll
-end
-
 function BoxCox.boxcoxplot(bc::BoxCoxTransformation; kwargs...)
     fig = Figure()
     boxcoxplot!(Axis(fig[1, 1]), bc; kwargs...)

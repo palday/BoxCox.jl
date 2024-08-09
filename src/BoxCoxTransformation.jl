@@ -135,53 +135,6 @@ function _boxcox!(y_trans, y, λ; kwargs...)
     return y_trans
 end
 
-"""
-    StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95, fast::Bool=nobs(bc) > 10_000)
-
-Compute confidence intervals for λ, with confidence level level (by default 95%).
-
-If `fast`, then a symmetric confidence interval around ̂λ is assumed and the upper bound
-is computed using the difference between the lower bound and λ. Symmetry is generally a
-safe assumption for approximate values and halves computation time.
-
-If not `fast`, then the lower and upper bounds are computed separately.
-"""
-function StatsAPI.confint(bc::BoxCoxTransformation; level::Real=0.95,
-                          fast::Bool=nobs(bc) > 10_000)
-    # ll0 = _loglikelihood_boxcox(0, bc.X, bc.y)
-
-    lltarget = loglikelihood(bc) - chisqinvcdf(1, level) / 2
-    opt = NLopt.Opt(:LN_BOBYQA, 1)
-    Xqr = isnothing(bc.X) ? nothing : qr(bc.X)
-    y_trans = similar(bc.y)
-    function obj(λvec, g)
-        isempty(g) || throw(ArgumentError("g should be empty for this objective"))
-        llhat = if isnothing(bc.X)
-            _loglikelihood_boxcox!(y_trans, bc.y, only(λvec))
-        else
-            _loglikelihood_boxcox!(y_trans, Xqr, bc.X, bc.y, only(λvec))
-        end
-        # want this to be zero
-        val = abs(llhat - lltarget)
-        return val
-    end
-    opt.min_objective = obj
-
-    NLopt.upper_bounds!(opt, bc.λ)
-    (ll, λvec, retval) = optimize(opt, [bc.λ - 1])
-    lower = only(λvec)
-
-    if fast
-        upper = (bc.λ - lower) + bc.λ
-    else
-        NLopt.lower_bounds!(opt, bc.λ)
-        NLopt.upper_bounds!(opt, Inf)
-        (ll, λvec, retval) = optimize(opt, [bc.λ + 1])
-        upper = only(λvec)
-    end
-    return [lower, upper]
-end
-
 function Base.show(io::IO, t::BoxCoxTransformation)
     println(io, "Box-Cox transformation")
     @printf io "\nestimated λ: %.4f" t.λ
@@ -215,6 +168,27 @@ end
 #####
 ##### Internal methods that traits redirect to
 #####
+
+function _loglikelihood_boxcox(X::AbstractMatrix{<:Number}, y::Vector{<:Number},
+                               λ::AbstractVector{<:Number})
+    y_trans = similar(y)
+    ll = similar(λ)
+    Xqr = qr(X)
+    for i in eachindex(ll, λ)
+        ll[i] = _loglikelihood_boxcox!(y_trans, Xqr, X, y, λ[i])
+    end
+    return ll
+end
+
+function _loglikelihood_boxcox(::Nothing, y::Vector{<:Number},
+                               λ::AbstractVector{<:Number})
+    y_trans = similar(y)
+    ll = similar(λ)
+    for i in eachindex(ll, λ)
+        ll[i] = _loglikelihood_boxcox!(y_trans, y, λ[i])
+    end
+    return ll
+end
 
 
 # pull this out so that we can use it in optimization

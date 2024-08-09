@@ -107,9 +107,6 @@ end
 
 _identity(yt::YeoJohnsonTransformation) = YeoJohnsonTransformation(; yt.y, λ=1, yt.X, yt.atol)
 
-# StatsAPI.confint -- can re refactor boxcox slightly so that we can share an implementation?
-
-
 function Base.show(io::IO, t::YeoJohnsonTransformation)
     println(io, "Yeo-Johnson transformation")
     @printf io "\nestimated λ: %.4f" t.λ

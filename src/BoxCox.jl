@@ -89,6 +89,54 @@ Base.isempty(x::PowerTransformation) = any(isempty, [x.y, something(modelmatrix(
 #####
 
 
+"""
+    StatsAPI.confint(x::PowerTransformation; level::Real=0.95, fast::Bool=nobs(bc) > 10_000)
+
+Compute confidence intervals for λ, with confidence level level (by default 95%).
+
+If `fast`, then a symmetric confidence interval around ̂λ is assumed and the upper bound
+is computed using the difference between the lower bound and λ. Symmetry is generally a
+safe assumption for approximate values and halves computation time.
+
+If not `fast`, then the lower and upper bounds are computed separately.
+"""
+function StatsAPI.confint(x::T; level::Real=0.95,
+                          fast::Bool=nobs(x) > 10_000) where {T <: PowerTransformation}
+    lltarget = loglikelihood(x) - chisqinvcdf(1, level) / 2
+    opt = NLopt.Opt(:LN_BOBYQA, 1)
+    X = modelmatrix(x)
+    Xqr = isnothing(X) ? nothing : qr(modelmatrix(x))
+    y_trans = similar(response(x))
+    ll! = _llfunc!(T)
+    function obj(λvec, g)
+        isempty(g) || throw(ArgumentError("g should be empty for this objective"))
+        llhat = if isnothing(X)
+            ll!(y_trans, response(x), only(λvec))
+        else
+            ll!(y_trans, Xqr, X, response(x), only(λvec))
+        end
+        # want this to be zero
+        val = abs(llhat - lltarget)
+        return val
+    end
+    opt.min_objective = obj
+
+    λ = only(params(x))
+    NLopt.upper_bounds!(opt, λ)
+    (ll, λvec, retval) = optimize(opt, [λ - 1])
+    lower = only(λvec)
+
+    if fast
+        upper = (λ - lower) + λ
+    else
+        NLopt.lower_bounds!(opt, λ)
+        NLopt.upper_bounds!(opt, Inf)
+        (ll, λvec, retval) = optimize(opt, [λ + 1])
+        upper = only(λvec)
+    end
+    return [lower, upper]
+end
+
 # TODO: Do more optimization error checking
 
 """
