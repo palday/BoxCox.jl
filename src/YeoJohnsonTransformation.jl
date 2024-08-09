@@ -177,7 +177,6 @@ function _loglikelihood_yeojohnson(::Nothing, y::Vector{<:Number},
     return ll
 end
 
-
 # setup linear regression
 function _loglikelihood_yeojohnson(λ::Number, X::AbstractMatrix{<:Number}, y::Vector{<:Number};
                                    kwargs...)

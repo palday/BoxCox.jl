@@ -64,21 +64,13 @@ end
 
     p = boxcoxplot(yt1; conf_level=0.95)
     save(path("yeojohnson.png"), p)
+    @test p isa Makie.Figure
 
     yt1 = YeoJohnsonTransformation(; λ=λref, X=ones(length(plants), 1), y=plants)
     p = boxcoxplot(yt1; conf_level=0.95)
     save(path("yeojohnson-matrix.png"), p)
-
-    @test bcp isa Makie.Figure
+    @test p isa Makie.Figure
 end
-
-# @testset "boxcox function" begin
-#     # log
-#     @test boxcox(0, 1) == boxcox(0)(1) == 0
-#     @test boxcox(1e-3, 1; atol=1e-2) == boxcox(1e-3; atol=1e-2)(1) == 0
-#     @test boxcox(1, 0) == -1
-#     @test boxcox(2, 0) == -1 / 2
-# end
 
 @testset "show" begin
     yt = YeoJohnsonTransformation(; λ=1, y=[], X=nothing)

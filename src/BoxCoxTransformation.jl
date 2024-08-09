@@ -87,8 +87,8 @@ function (t::BoxCoxTransformation)(x::Number)
 end
 
 """
-    boxcoxplot(bc::BoxCoxTransformation; kwargs...)
-    boxcoxplot!(axis::Axis, bc::BoxCoxTransformation;
+    boxcoxplot(bc::PowerTransformation; kwargs...)
+    boxcoxplot!(axis::Axis, bc::PowerTransformation;
                 λ=nothing, n_steps=21, xlabel="λ", ylabel="log likelihood",
                 conf_level=nothing, attributes...)
 
@@ -112,16 +112,15 @@ If `conf_level` is `nothing`, then no confidence interval is displayed.
     The plotting functionality interface is defined as a package extension and only loaded when Makie is available.
     You must load an appropriate Makie backend (e.g., CairoMakie or GLMakie) to actually render a plot.
 """
-function boxcoxplot!(::Any, ::PowerTransformation; kwargs...)
+function boxcoxplot!(::Any, ::Any; kwargs...)
     # specialize slightly so that they can't just throw Any and get this message
     throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
 end
 
 "$(@doc boxcoxplot!)"
-function boxcoxplot(::PowerTransformation; kwargs...)
+function boxcoxplot(::Any; kwargs...)
     throw(ArgumentError("Have you loaded an appropriate Makie backend?"))
 end
-
 
 """
     _boxcox!(y_trans, y, λ; kwargs...)

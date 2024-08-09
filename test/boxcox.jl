@@ -89,8 +89,8 @@ end
                 ylabel="LL")
     save(path("boxcox_formula.png"), bcpf)
 
-    @test_throws ArgumentError boxcoxplot(FakeTransformation())
-    @test_throws ArgumentError boxcoxplot!(ax, FakeTransformation())
+    @test_throws ArgumentError boxcoxplot(1)
+    @test_throws ArgumentError boxcoxplot!(ax, 1)
 end
 
 @testset "boxcox function" begin
