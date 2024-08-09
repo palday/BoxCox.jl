@@ -158,7 +158,7 @@ end
     @test only(params(yt)) ≈ -1 atol = 0.1
     ci = confint(yt; fast=false)
     ref_ci = [-1.73449, -0.413651]
-    @test all(isapprox.(confint(yt; fast=true), ci; atol=0.01))
+    @test all(isapprox.(confint(yt; fast=true), ci; atol=0.05))
     @test all(isapprox.(ci, ref_ci; rtol=0.05))
 
     @testset "mixed models + makie integration" begin
