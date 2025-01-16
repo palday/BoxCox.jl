@@ -100,9 +100,10 @@ safe assumption for approximate values and halves computation time.
 If not `fast`, then the lower and upper bounds are computed separately.
 """
 function StatsAPI.confint(x::T; level::Real=0.95,
-                          fast::Bool=nobs(x) > 10_000) where {T<:PowerTransformation}
+                          fast::Bool=nobs(x) > 10_000,
+                          optimizer=:LN_BOBYQA) where {T<:PowerTransformation}
     lltarget = loglikelihood(x) - chisqinvcdf(1, level) / 2
-    opt = NLopt.Opt(:LN_BOBYQA, 1)
+    opt = NLopt.Opt(optimizer, 1)
     X = modelmatrix(x)
     Xqr = isnothing(X) ? nothing : qr(modelmatrix(x))
     y_trans = similar(response(x))

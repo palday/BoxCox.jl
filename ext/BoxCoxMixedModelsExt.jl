@@ -22,10 +22,12 @@ MixedModelPowerTransformation = Union{BoxCoxTransformation{LinearMixedModel},
 # (maybe make PowerTransformation parametric?)
 function StatsAPI.confint(t::T; level::Real=0.95,
                           fast::Bool=nobs(t) > 10_000,
-                          progress=true) where
+                          progress=true, optimizer=:LN_COBYLA) where
          {T<:MixedModelPowerTransformation}
     lltarget = loglikelihood(t) - chisqinvcdf(1, level) / 2
-    opt = NLopt.Opt(:LN_BOBYQA, 1)
+    # on Julia 1.11.2-aarm64, BOBYQA seems to take us into a poorly supported
+    # area of the parameter space and tests fail
+    opt = NLopt.Opt(optimizer, 1)
     y = response(t)
     y_trans = similar(y)
     X = modelmatrix(t)
