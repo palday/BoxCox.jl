@@ -4,7 +4,7 @@
 [![Stable Docs][docs-stable-img]][docs-stable-url]
 [![Dev Docs][docs-dev-img]][docs-dev-url]
 [![Codecov](https://codecov.io/gh/palday/BoxCox.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/palday/BoxCox.jl)
-<!-- [![DOI](https://zenodo.org/badge/337082315.svg)](https://zenodo.org/badge/latestdoi/337082315) -->
+[![DOI](https://zenodo.org/badge/682869439.svg)](https://doi.org/10.5281/zenodo.16986704)
 [![Code Style: YAS](https://img.shields.io/badge/code%20style-yas-1fdcb3.svg)](https://github.com/jrevels/YASGuide)
 [![This project is using Percy.io for visual regression testing.](https://percy.io/static/images/percy-badge.svg)](https://percy.io/d68e1e2f/BoxCox.jl)
 
