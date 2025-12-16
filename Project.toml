@@ -30,7 +30,8 @@ BoxCoxMixedModelsExt = ["MixedModels", "Tables"]
 BoxCoxStatsModelsExt = ["StatsModels", "Tables"]
 
 [compat]
-Aqua = "0.6"
+Aqua = "0.8"
+CairoMakie = "0.8 - 0.15"
 DocStringExtensions = "0.9"
 LinearAlgebra = "1"
 Makie = "0.19, 0.20, 0.21, 0.22, 0.23, 0.24"
